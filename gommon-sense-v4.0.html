@@ -370,6 +370,8 @@ const SYSTEM_PROMPT = `당신은 고위드(Gowid) 실무부서 담당자를 위�
 
 // ========== API ==========
 const DEFAULT_KEY = 'AIzaSyAxSCpAelKr7Hj-M9xZeWP5XKb8mlAKfsc';
+const DEFAULT_SLACK_TOKEN = 'xoxb-523970022560-10596436186850-EHekobiznpnPYAfU84wCUfgs';
+const DEFAULT_SLACK_USER = 'U080B5UD7RA';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 async function callAI(userText) {
@@ -635,8 +637,8 @@ function copySlack(btn) {
 }
 
 async function sendSlack(btn) {
-  const token = localStorage.getItem('gowid_slack_bot_token');
-  const userId = localStorage.getItem('gowid_slack_user_id');
+  const token = localStorage.getItem('gowid_slack_bot_token') || DEFAULT_SLACK_TOKEN;
+  const userId = localStorage.getItem('gowid_slack_user_id') || DEFAULT_SLACK_USER;
   if (!token) {
     alert('Slack Bot Token을 먼저 설정해 주세요.');
     showSlackBot();
@@ -718,10 +720,9 @@ window.addEventListener('DOMContentLoaded', () => {
   // 기본 키가 있으므로 항상 API 섹션 숨김
   document.getElementById('apiSection').classList.add('hidden');
   document.getElementById('apiStatus').classList.remove('hidden');
-  if (localStorage.getItem('gowid_slack_bot_token')) {
-    document.getElementById('slackSection').classList.add('hidden');
-    document.getElementById('slackStatus').classList.remove('hidden');
-  }
+  // 기본 Slack 설정이 있으므로 항상 숨김
+  document.getElementById('slackSection').classList.add('hidden');
+  document.getElementById('slackStatus').classList.remove('hidden');
   toggleBtn();
 });
 
