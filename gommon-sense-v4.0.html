@@ -369,10 +369,11 @@ const SYSTEM_PROMPT = `당신은 고위드(Gowid) 실무부서 담당자를 위�
 - tag는 해당 플래그의 핵심을 2-4자로 압축 (예: 형식괴리, 이자성, 파기의무, 배임방어, 불공정)`;
 
 // ========== API ==========
+const DEFAULT_KEY = 'AIzaSyAxSCpAelKr7Hj-M9xZeWP5XKb8mlAKfsc';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 async function callAI(userText) {
-  const key = localStorage.getItem('gowid_gemini_key');
+  const key = localStorage.getItem('gowid_gemini_key') || DEFAULT_KEY;
   if (!key) throw new Error('API 키가 설정되지 않았습니다.');
 
   const res = await fetch(`${GEMINI_URL}?key=${key}`, {
@@ -446,7 +447,7 @@ function showSlackBot() {
 }
 
 function toggleBtn() {
-  const hasKey = !!localStorage.getItem('gowid_gemini_key');
+  const hasKey = !!(localStorage.getItem('gowid_gemini_key') || DEFAULT_KEY);
   const hasText = !!document.getElementById('userInput').value.trim();
   document.getElementById('scanBtn').disabled = !(hasKey && hasText);
 }
@@ -714,10 +715,9 @@ function resetAll() {
 
 // Init
 window.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem('gowid_gemini_key')) {
-    document.getElementById('apiSection').classList.add('hidden');
-    document.getElementById('apiStatus').classList.remove('hidden');
-  }
+  // 기본 키가 있으므로 항상 API 섹션 숨김
+  document.getElementById('apiSection').classList.add('hidden');
+  document.getElementById('apiStatus').classList.remove('hidden');
   if (localStorage.getItem('gowid_slack_bot_token')) {
     document.getElementById('slackSection').classList.add('hidden');
     document.getElementById('slackStatus').classList.remove('hidden');
