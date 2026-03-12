@@ -1,0 +1,8 @@
+# 구버전 / 개발 히스토리 (배포 불필요)
+gowid-legal-risk-checker*.html
+grey-sense-v1.0.html
+
+# 원본 데이터 (민감)
+*.xlsx
+*.txt
+_tmp_xlsx/

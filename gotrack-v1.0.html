@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go_track v1.0 — 계약서 변경 이력 가이드</title>
+<style>
+  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#22223a;--accent:#6ec8a0;--accent-dim:rgba(110,200,160,.15);--red:#ff6b6b;--red-bg:rgba(255,107,107,.12);--yellow:#ffd43b;--yellow-bg:rgba(255,212,59,.10);--green:#69db7c;--green-bg:rgba(105,219,124,.10);--blue:#74c0fc;--blue-bg:rgba(116,192,252,.10);--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
+  .wrap{max-width:760px;margin:0 auto;padding:20px}
+
+  /* Header */
+  header{padding:32px 0;text-align:center;border-bottom:1px solid var(--t15)}
+  header h1{font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--t50)}
+  header h1 span.brand{color:var(--accent)}
+  header .ver{font-size:12px;color:var(--accent);font-weight:600;margin-left:6px;vertical-align:super}
+  header p{font-size:13px;color:var(--t60);margin-top:6px}
+  header .sub{font-size:11px;color:var(--t30);margin-top:4px}
+
+  /* Input */
+  .input-card{background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:28px;margin-top:24px}
+  .input-card h2{font-size:16px;font-weight:600;margin-bottom:4px;color:var(--t50)}
+  .input-card .hint{font-size:13px;color:var(--t60);margin-bottom:16px}
+  textarea.main-input{width:100%;min-height:100px;background:var(--t08);border:1.5px solid var(--t15);border-radius:10px;padding:14px;font-size:15px;font-family:inherit;color:var(--t50);line-height:1.6;resize:vertical;transition:border-color .2s}
+  textarea.main-input:focus{outline:none;border-color:var(--accent)}
+  textarea.main-input::placeholder{color:var(--t30)}
+
+  /* Document paste area */
+  .doc-divider{margin-top:20px;border:none;border-top:1px solid var(--t08);margin-bottom:4px}
+  .doc-toggle{display:flex;align-items:center;gap:10px;margin-top:12px;padding:11px 16px;background:transparent;border:1px dashed var(--t15);border-radius:10px;cursor:pointer;transition:all .25s;user-select:none}
+  .doc-toggle:hover{border-color:var(--accent);background:var(--accent-dim);border-style:solid}
+  .doc-toggle.active{border-color:var(--accent);border-style:solid;background:var(--accent-dim);border-radius:10px 10px 0 0;margin-bottom:0}
+  .doc-toggle .chevron{font-size:10px;color:var(--t30);transition:transform .25s;display:inline-block;width:16px;text-align:center}
+  .doc-toggle .chevron.open{transform:rotate(90deg);color:var(--accent)}
+  .doc-toggle .doc-label{font-size:13px;color:var(--t60);font-weight:500;transition:color .2s}
+  .doc-toggle:hover .doc-label,.doc-toggle.active .doc-label{color:var(--t80)}
+  .doc-toggle .doc-optional{font-size:11px;color:var(--t30);margin-left:auto;padding:2px 8px;border:1px solid var(--t08);border-radius:4px}
+  .doc-area{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease, padding .3s ease;padding:0 16px;background:rgba(110,200,160,.03);border:1px solid var(--accent);border-top:none;border-radius:0 0 10px 10px;overflow:hidden}
+  .doc-area>div{overflow:hidden}
+  .doc-area.open{grid-template-rows:1fr;padding:16px}
+  .doc-area .doc-hint{font-size:12px;color:var(--t60);margin-bottom:10px;line-height:1.5}
+  .doc-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  textarea.doc-input{width:100%;min-height:180px;background:var(--t08);border:1.5px solid var(--t15);border-radius:8px;padding:14px;font-size:13px;font-family:inherit;color:var(--t50);line-height:1.6;resize:vertical;transition:border-color .2s}
+  textarea.doc-input:focus{outline:none;border-color:var(--accent)}
+  textarea.doc-input::placeholder{color:var(--t30)}
+  .doc-col-label{font-size:12px;font-weight:600;color:var(--t60);margin-bottom:6px}
+  .doc-col-label.old{color:var(--red)}
+  .doc-col-label.new{color:var(--green)}
+
+  /* Quick Tags */
+  .quick-tags{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+  .q-tag{font-size:12px;padding:5px 14px;border:1px solid var(--t15);border-radius:20px;cursor:pointer;transition:all .15s;background:transparent;color:var(--t60);font-weight:500}
+  .q-tag:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+
+  /* Contract Tree */
+  .tree-section{margin-top:16px}
+  .tree-toggle{display:flex;align-items:center;gap:10px;padding:11px 16px;background:transparent;border:1px solid var(--t15);border-radius:10px;cursor:pointer;transition:all .25s;user-select:none;width:100%}
+  .tree-toggle:hover{border-color:var(--accent);background:var(--accent-dim)}
+  .tree-toggle.active{border-color:var(--accent);background:var(--accent-dim);border-radius:10px 10px 0 0}
+  .tree-toggle .chevron{font-size:10px;color:var(--t30);transition:transform .25s;display:inline-block;width:16px;text-align:center}
+  .tree-toggle .chevron.open{transform:rotate(90deg);color:var(--accent)}
+  .tree-toggle .tree-label{font-size:13px;color:var(--t60);font-weight:600;transition:color .2s}
+  .tree-toggle:hover .tree-label,.tree-toggle.active .tree-label{color:var(--t80)}
+  .tree-toggle .tree-count{font-size:11px;color:var(--t30);margin-left:auto;padding:2px 8px;border:1px solid var(--t08);border-radius:4px}
+  .tree-panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease;border:1px solid var(--accent);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;background:rgba(110,200,160,.02)}
+  .tree-panel>div{overflow:hidden}
+  .tree-panel.open{grid-template-rows:1fr}
+  .tree-inner{padding:12px 16px;max-height:480px;overflow-y:auto}
+  .tree-inner::-webkit-scrollbar{width:5px}
+  .tree-inner::-webkit-scrollbar-thumb{background:var(--t15);border-radius:3px}
+  .tree-inner::-webkit-scrollbar-thumb:hover{background:var(--t30)}
+  .tree-search{width:100%;padding:8px 12px;border:1px solid var(--t15);border-radius:8px;font-size:13px;font-family:inherit;background:var(--t08);color:var(--t50);margin-bottom:10px}
+  .tree-search:focus{outline:none;border-color:var(--accent)}
+  .tree-search::placeholder{color:var(--t30)}
+  .tree-folder{margin-bottom:6px}
+  .folder-header{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;transition:background .15s;user-select:none}
+  .folder-header:hover{background:var(--t08)}
+  .folder-chevron{font-size:9px;color:var(--t30);transition:transform .2s;display:inline-block;width:14px;text-align:center}
+  .folder-chevron.open{transform:rotate(90deg);color:var(--accent)}
+  .folder-icon{font-size:14px}
+  .folder-name{font-size:13px;font-weight:600;color:var(--t80)}
+  .folder-count{font-size:11px;color:var(--t30);margin-left:auto}
+  .folder-items{display:none;padding-left:22px}
+  .folder-items.open{display:block}
+
+  /* Tree item — base row */
+  .tree-item-wrap{margin-bottom:2px}
+  .tree-item-wrap.hidden-item{display:none}
+  .tree-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;cursor:pointer;transition:all .15s;user-select:none;border:1px solid transparent}
+  .tree-item:hover{background:var(--accent-dim)}
+  .tree-item.selected{background:var(--accent-dim);border-color:var(--accent)}
+  .tree-item .item-code{font-size:12px;font-weight:700;color:var(--accent);min-width:56px;font-family:'SF Mono','Consolas',monospace}
+  .tree-item .item-name{font-size:12px;color:var(--t60);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tree-item .item-current{font-size:10px;color:var(--green);font-weight:700;padding:1px 6px;border:1px solid rgba(105,219,124,.25);border-radius:3px;flex-shrink:0;letter-spacing:.5px}
+
+  /* Version expand button */
+  .ver-toggle{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--t30);padding:2px 7px;border:1px solid var(--t15);border-radius:4px;cursor:pointer;transition:all .15s;flex-shrink:0;background:transparent}
+  .ver-toggle:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+  .ver-toggle.open{border-color:var(--accent);color:var(--accent)}
+  .ver-toggle .ver-chevron{font-size:8px;transition:transform .2s;display:inline-block}
+  .ver-toggle.open .ver-chevron{transform:rotate(90deg)}
+
+  /* Previous versions sub-list */
+  .ver-history{display:none;padding-left:28px;margin-top:2px;border-left:2px solid var(--t08);margin-left:20px}
+  .ver-history.open{display:block}
+  .ver-item{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:5px;cursor:pointer;transition:all .15s;user-select:none;border:1px solid transparent}
+  .ver-item:hover{background:rgba(255,255,255,.04)}
+  .ver-item.selected{background:rgba(255,212,59,.06);border-color:rgba(255,212,59,.2)}
+  .ver-item .vi-code{font-size:11px;font-weight:600;color:var(--t30);min-width:48px;font-family:'SF Mono','Consolas',monospace}
+  .ver-item .vi-name{font-size:11px;color:var(--t30);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ver-item .vi-old{font-size:9px;color:var(--t30);padding:1px 5px;border:1px solid var(--t08);border-radius:3px;flex-shrink:0}
+
+  /* Button */
+  .btn-scan{margin-top:16px;width:100%;padding:14px;background:var(--accent);color:#111;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.3px}
+  .btn-scan:hover{opacity:.9;box-shadow:0 0 20px rgba(110,200,160,.3)}
+  .btn-scan:disabled{background:var(--t15);color:var(--t30);cursor:not-allowed;box-shadow:none}
+
+  /* API key */
+  .api-row{display:flex;gap:8px;margin-bottom:16px;align-items:center}
+  .api-row input{flex:1;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:13px;font-family:inherit;background:var(--t08);color:var(--t50)}
+  .api-row input:focus{outline:none;border-color:var(--accent)}
+  .api-row .save-btn{padding:10px 16px;background:var(--t15);border:1px solid var(--t15);border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--t80);transition:background .15s}
+  .api-row .save-btn:hover{background:var(--t30)}
+  .api-status{font-size:12px;color:var(--green);margin-bottom:12px}
+  .api-link{font-size:12px;color:var(--t60);margin-bottom:12px}
+  .api-link a{color:var(--accent)}
+  .hidden{display:none!important}
+
+  /* Loading */
+  .loading{text-align:center;padding:40px;margin-top:24px}
+  .spinner{width:40px;height:40px;border:3px solid var(--t15);border-top:3px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading p{font-size:14px;color:var(--t60)}
+
+  /* Result */
+  .result{margin-top:24px;animation:fadeIn .4s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+  /* Headline Box */
+  .headline-box{background:linear-gradient(135deg,var(--card) 0%,rgba(110,200,160,.08) 100%);border:1px solid var(--t15);border-radius:var(--r);padding:24px;text-align:center}
+  .headline-box .label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px;font-weight:600}
+  .headline-box h2{font-size:20px;font-weight:700;color:var(--t50);line-height:1.4}
+  .headline-box .contract-ref{font-size:12px;color:var(--t60);margin-top:8px}
+
+  /* Change Cards */
+  .changes-section{margin-top:20px}
+  .changes-section .sec-title{font-size:13px;color:var(--t60);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .change-card{background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:20px;margin-bottom:12px;transition:border-color .2s}
+  .change-card:hover{border-color:var(--t30)}
+
+  .change-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .change-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:700;background:var(--accent-dim);color:var(--accent)}
+  .change-title{font-size:15px;font-weight:600;color:var(--t50)}
+  .impact-badge{font-size:11px;padding:2px 10px;border-radius:4px;font-weight:600;margin-left:auto}
+  .impact-badge.high{background:var(--red-bg);color:var(--red);border:1px solid rgba(255,107,107,.2)}
+  .impact-badge.mid{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(255,212,59,.2)}
+  .impact-badge.low{background:var(--green-bg);color:var(--green);border:1px solid rgba(105,219,124,.2)}
+
+  /* Before / After */
+  .diff-box{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .diff-col{padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.7}
+  .diff-col.before{background:rgba(255,107,107,.06);border-left:3px solid var(--red)}
+  .diff-col.after{background:rgba(105,219,124,.06);border-left:3px solid var(--green)}
+  .diff-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+  .diff-label.before{color:var(--red)}
+  .diff-label.after{color:var(--green)}
+  .diff-text{color:var(--t80)}
+
+  /* Rationale */
+  .rationale{padding:12px 14px;background:rgba(110,200,160,.06);border-radius:8px;margin-bottom:10px;border-left:3px solid var(--accent)}
+  .rationale .r-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:4px}
+  .rationale .r-text{font-size:14px;color:var(--t80);line-height:1.7}
+
+  /* Biz Checkpoint */
+  .biz-check{padding:12px 14px;background:rgba(116,192,252,.06);border-radius:8px;border-left:3px solid var(--blue)}
+  .biz-check .b-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:4px}
+  .biz-check .b-text{font-size:14px;color:var(--t80);line-height:1.7}
+
+  /* Summary */
+  .summary-box{margin-top:20px;background:var(--card);border:1px solid var(--accent);border-radius:var(--r);padding:20px}
+  .summary-box .s-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--accent);font-weight:600;margin-bottom:8px}
+  .summary-box .s-text{font-size:14px;color:var(--t50);line-height:1.8}
+
+  /* Cross-link to Gommon Sense */
+  .cross-link{margin-top:12px;background:linear-gradient(135deg,rgba(124,140,240,.06) 0%,var(--card) 100%);border:1px solid rgba(124,140,240,.2);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:12px}
+  .cross-link .cl-icon{font-size:20px;flex-shrink:0}
+  .cross-link .cl-body{flex:1}
+  .cross-link .cl-title{font-size:13px;font-weight:600;color:rgba(124,140,240,1);margin-bottom:2px}
+  .cross-link .cl-desc{font-size:12px;color:var(--t60)}
+
+  /* Footer */
+  .disclaimer{margin-top:20px;font-size:11px;color:var(--t30);text-align:center;line-height:1.6}
+  .reset-btn{margin-top:16px;display:block;text-align:center;color:var(--t60);font-size:14px;cursor:pointer;text-decoration:underline;transition:color .15s}
+  .reset-btn:hover{color:var(--accent)}
+
+  .error-box{margin-top:24px;padding:16px 20px;background:var(--red-bg);border:1px solid rgba(255,107,107,.25);border-radius:var(--r);font-size:14px;color:var(--red)}
+
+  @media(max-width:600px){.wrap{padding:12px}.input-card{padding:18px}.diff-box{grid-template-columns:1fr}.doc-columns{grid-template-columns:1fr}.api-row{flex-direction:column}.change-header{flex-direction:column;align-items:flex-start;gap:6px}.impact-badge{margin-left:0}}
+  @media print{header{border:none}.btn-scan,.quick-tags,.reset-btn,.api-row,.api-status,.api-link,.doc-toggle,.doc-area,.cross-link,.tree-section{display:none}.input-card,.change-card,.headline-box,.summary-box{border:1px solid #444}}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="brand">Go</span>_track<span class="ver">v1.0</span></h1>
+  <p>계약서 변경 이력 & 개정 취지 가이드</p>
+  <div class="sub">Gommon Sense Spin-off &middot; 고위드 표준 계약서 변경 추적</div>
+</header>
+<div class="wrap">
+  <div class="input-card">
+    <!-- API Key -->
+    <div id="apiSection">
+      <div class="api-row">
+        <input type="password" id="apiKey" placeholder="Gemini API 키를 입력하세요" />
+        <button class="save-btn" onclick="saveKey()">저장</button>
+      </div>
+      <div class="api-link">API 키가 없다면 → <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에서 발급</div>
+    </div>
+    <div class="api-status hidden" id="apiStatus">✓ API 키 저장됨 · <span style="cursor:pointer;text-decoration:underline" onclick="showKeyInput()">변경</span></div>
+
+    <h2>어떤 계약서가 궁금하신가요?</h2>
+    <p class="hint">계약서 코드, 조항명, 또는 변경 내용에 대한 질문을 자유롭게 입력하세요.</p>
+    <textarea class="main-input" id="userInput" placeholder="예: F53F 최신 개정에서 뭐가 바뀌었나요?&#10;&#10;예: V02B 자동연장 조항이 새로 생긴 배경이 궁금합니다&#10;&#10;예: G06B 기한이익 상실 조항이 강화됐다는데, 현업에서 뭘 주의해야 하나요?" oninput="toggleBtn()"></textarea>
+
+    <div class="quick-tags">
+      <span class="q-tag" onclick="injectTag(this)">FUEL 계약서</span>
+      <span class="q-tag" onclick="injectTag(this)">VWS 계약서</span>
+      <span class="q-tag" onclick="injectTag(this)">일반(G) 보증·담보</span>
+      <span class="q-tag" onclick="injectTag(this)">엔진 계약서</span>
+      <span class="q-tag" onclick="injectTag(this)">구독(S) 계약서</span>
+      <span class="q-tag" onclick="injectTag(this)">수수료 변경</span>
+      <span class="q-tag" onclick="injectTag(this)">자동연장 조항</span>
+      <span class="q-tag" onclick="injectTag(this)">출금제한 특약</span>
+    </div>
+
+    <!-- Contract Tree -->
+    <div class="tree-section">
+      <div class="tree-toggle" id="treeToggle" onclick="toggleTree()">
+        <span class="chevron" id="treeChevron">▶</span>
+        <span class="tree-label">계약서 목록에서 선택</span>
+        <span class="tree-count" id="treeCount">40개</span>
+      </div>
+      <div class="tree-panel" id="treePanel">
+        <div>
+          <div class="tree-inner">
+            <input type="text" class="tree-search" id="treeSearch" placeholder="계약서 코드 또는 이름 검색..." oninput="filterTree()">
+            <div id="treeBody"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document paste area (collapsible) -->
+    <hr class="doc-divider">
+    <div class="doc-toggle" id="docToggle" onclick="toggleDoc()">
+      <span class="chevron" id="docChevron">▶</span>
+      <span class="doc-label">계약서 텍스트를 직접 비교하려면 여기에 붙여 넣으세요</span>
+      <span class="doc-optional">선택</span>
+    </div>
+    <div class="doc-area" id="docArea">
+      <div>
+        <p class="doc-hint">이전 버전과 현재 버전의 계약서 텍스트를 각각 붙여 넣으면, AI가 변경 사항을 분석합니다.</p>
+        <div class="doc-columns">
+          <div>
+            <div class="doc-col-label old">이전 버전</div>
+            <textarea class="doc-input" id="docOld" placeholder="이전 버전 계약서 텍스트..."></textarea>
+          </div>
+          <div>
+            <div class="doc-col-label new">현재 버전</div>
+            <textarea class="doc-input" id="docNew" placeholder="현재 버전 계약서 텍스트..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-scan" id="scanBtn" onclick="scan()" disabled>변경 이력 분석</button>
+  </div>
+  <div id="resultArea"></div>
+</div>
+
+<script>
+// ========== SYSTEM PROMPT — Go_track v1.0 ==========
+const SYSTEM_PROMPT = `당신은 고위드(GOWID)의 표준 계약서 변경 이력 및 개정 취지 전문 안내 가이드 "Gotrack(고트랙)"입니다.
+
+## 페르소나
+법률 지식이 생소한 비법무 담당자(영업, 운영, 전략 등)에게 친절하고 명쾌하게 설명하는 파트너입니다.
+권위적인 말투를 지양하고, 비즈니스 관점에서 개정의 실익을 설명합니다.
+
+## 핵심 미션
+1. **변경 사항 대조**: 과거 버전과 현재 버전의 조항 차이를 명확히 구분하여 설명
+2. **개정 취지 설명**: 단순한 문구 수정을 넘어, '왜' 바뀌었는지(법적 리스크 감소, 업무 효율화, 카드사 요청 등) 비즈니스 맥락을 제공
+3. **현업 영향도 분석**: 이 개정으로 인해 현업 담당자가 주의해야 할 점이나 고객사 대응 시 활용할 수 있는 포인트를 제시
+
+## 답변 가이드라인
+- **쉬운 용어 사용**: '대위변제', '구상권', '신용공여' 등 어려운 용어는 고위드의 비즈니스 모델에 맞춰 풀어서 설명
+- **구조적 요약**: 반드시 [개정 전/후], [개정 취지], [현업 체크포인트]의 구조를 유지
+- **데이터 근거**: 입력된 고위드 표준 계약서 관리 대장 및 히스토리를 바탕으로 답변하며, 추측하지 않음
+- **Gommon Sense 연동**: 리스크 판단이 필요한 영역은 "상세한 리스크 체크는 Gommon Sense를 활용하세요"라고 안내
+
+## 고위드 표준 계약서 템플릿 체계 (As of 2026.01)
+
+### 일반 [G] — 공통 보증·담보·상환
+- G00: 공문 양식
+- G01: 보증금 계약서
+- G02: 연대보증 계약서 (법인)
+- G03: 연대보증 계약서 (개인) — 최대주주/대표자 개인보증용
+- G04: (카드) 출금제한 및 매출 집금 특약 동의서
+- G05: 연대보증 계약서 (개인)_RMS 연계 — Risk Management System 연동
+- GS03~GS05: 출금제한 특약 부속합의서 (매출 집금 대상 특정형 / 기간 별도 약정 / 슬라이딩 방식)
+- G06: 분할상환 약정서 — ★G06B: 기한이익 상실 조항 강화 (1회·일부 연체 시)
+- G07: 자회사/지점 인증서 등록 및 정보 활용 동의서
+- G08: 연대보증계약서_(개인)_for RMS_할부판매용
+
+### FUEL [F] — 선정산/한도 서비스
+- ★F53F (현행): FUEL 53일 서비스 이용 계약서 — 수수료 면제 프로모션 종료, 수수료율 상향(0.7% 가산, 2.0%), 긴급신청 시 첫달 미니멈개런티 적용
+- F53-S01: 수수료 면제 프로모션 별지
+- FS02: 출금제한 및 매출 집금 특약 (웰컴저축은행 연계, FUEL 공통)
+- FS03~FS05: 출금제한 특약 부속합의서 3종 (매출 집금 대상 특정/기간 별도/슬라이딩)
+- F61A: FUEL 61일 상품 — 익익월 1일 납부, 수수료 1.3%, 페이백 X, 결제처 사전지정, 가맹점 수수료 210bp 이하 비대상
+- ★F83D (현행): FUEL 83일 상품 — 페이백 제외 대상 가산수수료 2.5%(기본2.0+가산0.5), 가장거래·카드깡 금지
+- F87A: FUEL 87일 상품 — 익익월 27일 납부, 신한카드, 페이백 X, 가맹점 수수료 200bp 이하(연매출 30억 영세거래처) 비대상
+- F01: B2B 카드결제 송금 대행 위수탁 계약서 (Pay by Card)
+- F02/F02E: 글로벌 정산대행 서비스 이용계약서 (국문/영문) — 해외 외화대금 수취 거래처용
+- F02-P/F02E-P: 글로벌 정산대행 플랫폼 버전
+- F03: PBC 글로벌 송금 위수탁 계약서 — 국내 위탁자용
+- F11: 채권근담보권 설정계약서 (광고 대행업)
+
+### VWS [V] — 구매대행/위탁판매/매매
+- V01: 구매대행 계약서
+- V02B (현행): 위탁판매 계약서 — 기준금액 정의 신설, 개별약정>특약>본문 우선순위 명문화, 자동연장, 수수료·이행보증금·캐시백 부속합의 이관 일원화
+- V03C (현행): 매입(마스터) 물품 매매계약서 — 1년 마스터+1개월 자동연장
+- VS01C: 고위드 판매 물품 매매계약서
+- VS02: 고위드 매입 물품 매매계약서 — PG 수수료 매도인 부담 (제3조 제3항)
+- V04: 물품인수증 (인도확인서)
+- VS03~VS04: VWS 출금제한 특약 부속합의서
+- V11B (현행): 구매대행 계약서 (신규)
+
+### ENGINE [E] — 렌탈/할부
+- E01: 엔진 연대보증 (재리스/렌탈)
+- E02: 엔진 연대보증 (할부판매)
+- E03: 엔진 연대보증 (통합 포괄형) — 추가 실행 시 합산
+
+### 구독 [S] — IT 렌탈/구독
+- S02: IT 기기 매입 계약서
+- S03: 블리스 멤버십 계약서 (커피머신+원두)
+- S04: 계약 인수 합의서
+- S05: IT 장비 구매 계약 동의서
+
+### FUEL 주요 개정 이력 (Grey Zone 판단 시 참고)
+- F53: 자동연장 조항 신설(만료 5영업일 전 서면 없을 시) → 수수료 면제 프로모션 추가 → 카드 혼용금지·연체 시 이용제한 추가 → 페이백 제외 가산수수료 도입 → ★F53F 프로모션 종료·수수료 상향·긴급신청 미니멈개런티
+- F83: 익익월 납부 구조, 출금제한 조항 고객 이슈 후 표현 완화 → ★F83D 가산수수료·가장거래 금지
+- VWS: VS02 PG 수수료 전가 조항 → V03 마스터 계약 전환 → V02B 우선순위 명문화·자동연장·금전항목 일원화
+
+### 주요 개별 프로젝트 선례 (참조)
+- 나인독: 광고 대행 + 연대보증(KG이니시스 양식+카드사 대위변제 결합 강화형)
+- 핏크루: 페이백 정산 협약 (현대카드 VWS 수수료 전액 수취 Agent)
+- 젠테: PG 정산대금 연동 단기 대여계약서
+- 품격한우/설로인: 부속합의서 (무상임치 형태로 장부상 정육 재고 보유 문제 헷징)
+- 몬스타: VWS 재고 매입대금 카드연체상환 확약 + 위탁판매 2회차
+- 디트라이브: 출금제한 특약 (특정 매출처 제한형)
+
+### 주요 내부 선례 (참조)
+- FUEL 수수료=이자 해당 여부 (대부업법 접점)
+- VWS 냉동육 구매대행: 통관 완료 시 라이선스 해소, 형식·실질 일치 핵심
+- 리바운드 마케팅: 신용정보법 3개월 파기 → 1년 전 데이터 불가
+- 자회사 부실채권 매입: 독자적 추심이익 구조로 배임/부당지원 방어
+- 법인 포인트: 재산권 성격 → 탈회 후 90일 유지, 1년 환급권
+- 카드 수수료 전가: 여전법 위반, 마크업(간접전가)도 위험
+- 주민번호 노출: '즉시 파기' 원칙
+- Relate CRM 국외이전: 시범=개별동의, 정식=처리방침 개정
+- 컨셉인 근저당: 9개 관계사 공동채무, 채권최고액 120% 원칙
+- 미스터아빠 매출채권: 관리형 채권양도담보(추심권 위임) 구조
+
+## 출력 형식 (반드시 JSON으로만 응답)
+
+{
+  "headline": "변경 이력 요약 한 줄 (25자 이내)",
+  "contractRef": "관련 계약서 코드 (예: F53F, V02B)",
+  "changes": [
+    {
+      "clause": "조항명 (예: 제5조 수수료)",
+      "impact": "high | mid | low",
+      "before": "이전 버전 핵심 내용 (1-2문장, 쉬운 말로)",
+      "after": "현재 버전 핵심 내용 (1-2문장, 쉬운 말로)",
+      "rationale": "왜 바뀌었는지 비즈니스 맥락 설명 (1-2문장)",
+      "bizCheckpoint": "현업 담당자가 주의할 점 또는 고객 대응 포인트 (1-2문장)"
+    }
+  ],
+  "summary": "전체 개정의 큰 그림을 비법무 담당자에게 설명하는 요약 (2-3문장)",
+  "riskNote": "리스크 판단이 필요한 부분이 있다면 Gommon Sense 연동 안내 (없으면 빈 문자열)"
+}
+
+## 규칙
+- changes는 주요 변경 사항만 포함 (1~6개). 사소한 문구 수정은 생략.
+- impact 판단: high=업무 프로세스 변경 필요/금액 영향, mid=주의 필요/부분 변경, low=참고 수준
+- before/after는 법률 용어 없이 실무자가 바로 이해할 수 있는 쉬운 말로 작성
+- rationale는 비즈니스 맥락(카드사 요청, 리스크 감소, 업무 효율화 등)을 중심으로 설명
+- bizCheckpoint는 구체적이고 실행 가능한 내용으로 작성
+- 사용자가 계약서 텍스트를 직접 제공한 경우, 해당 텍스트를 기반으로 분석
+- 텍스트 없이 계약서 코드만 언급한 경우, 내장된 히스토리 데이터를 기반으로 답변
+- 추측하지 말 것. 알고 있는 정보 범위 내에서만 답변하고, 불확실한 부분은 명시할 것`;
+
+// ========== API ==========
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+async function callAI(userText) {
+  const key = localStorage.getItem('gotrack_gemini_key');
+  if (!key) throw new Error('API 키가 설정되지 않았습니다.');
+
+  const res = await fetch(`${GEMINI_URL}?key=${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      contents: [{ parts: [{ text: userText }] }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 4096,
+        responseMimeType: "application/json"
+      }
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    if (res.status === 401 || res.status === 403) throw new Error('API 키가 유효하지 않습니다. 키를 확인해 주세요.');
+    if (res.status === 429) throw new Error('요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.');
+    throw new Error(err.error?.message || `API 오류 (${res.status})`);
+  }
+
+  const data = await res.json();
+  const candidate = data.candidates?.[0];
+  const text = candidate?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('AI 응답을 받지 못했습니다.');
+
+  if (candidate.finishReason === 'MAX_TOKENS') {
+    throw new Error('응답이 너무 길어 잘렸습니다. 질문을 더 구체적으로 입력해 주세요.');
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error('AI 응답 JSON 파싱 실패. 다시 시도해 주세요.');
+  }
+}
+
+// ========== UI ==========
+function saveKey() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) return;
+  localStorage.setItem('gotrack_gemini_key', key);
+  document.getElementById('apiSection').classList.add('hidden');
+  document.getElementById('apiStatus').classList.remove('hidden');
+  toggleBtn();
+}
+
+function showKeyInput() {
+  document.getElementById('apiSection').classList.remove('hidden');
+  document.getElementById('apiStatus').classList.add('hidden');
+  document.getElementById('apiKey').value = localStorage.getItem('gotrack_gemini_key') || '';
+}
+
+function toggleBtn() {
+  const hasKey = !!localStorage.getItem('gotrack_gemini_key');
+  const hasText = !!document.getElementById('userInput').value.trim();
+  document.getElementById('scanBtn').disabled = !(hasKey && hasText);
+}
+
+function toggleDoc() {
+  const area = document.getElementById('docArea');
+  const chevron = document.getElementById('docChevron');
+  const toggle = document.getElementById('docToggle');
+  const isOpen = area.classList.toggle('open');
+  chevron.classList.toggle('open', isOpen);
+  toggle.classList.toggle('active', isOpen);
+}
+
+const TAG_CONTEXT = {
+  'FUEL 계약서': '[FUEL 계약서 변경 이력] ',
+  'VWS 계약서': '[VWS 계약서 변경 이력] ',
+  '일반(G) 보증·담보': '[일반(G) 보증/담보 계약서] ',
+  '엔진 계약서': '[엔진 계약서 변경 이력] ',
+  '구독(S) 계약서': '[구독(S) 계약서 변경 이력] ',
+  '수수료 변경': '[수수료 관련 조항 변경] ',
+  '자동연장 조항': '[자동연장 조항 변경] ',
+  '출금제한 특약': '[출금제한 특약 변경] '
+};
+
+function injectTag(el) {
+  const input = document.getElementById('userInput');
+  const prefix = TAG_CONTEXT[el.textContent] || '';
+  const current = input.value;
+  if (!current.trim()) {
+    input.value = prefix;
+  } else {
+    const hasPrefix = Object.values(TAG_CONTEXT).some(p => current.startsWith(p));
+    if (hasPrefix) {
+      const body = current.replace(/^\[.+?\]\s*/, '');
+      input.value = prefix + body;
+    } else {
+      input.value = prefix + current;
+    }
+  }
+  input.focus();
+  toggleBtn();
+}
+
+async function scan() {
+  const questionText = document.getElementById('userInput').value.trim();
+  if (!questionText) return;
+
+  const docOld = document.getElementById('docOld').value.trim();
+  const docNew = document.getElementById('docNew').value.trim();
+
+  let combined = `[질문] ${questionText}`;
+  if (docOld || docNew) {
+    combined += '\n\n[첨부 계약서 텍스트]';
+    if (docOld) combined += `\n--- 이전 버전 ---\n${docOld}`;
+    if (docNew) combined += `\n--- 현재 버전 ---\n${docNew}`;
+  }
+
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.textContent = '분석 중...';
+
+  document.getElementById('resultArea').innerHTML = `<div class="loading"><div class="spinner"></div><p>계약서 변경 이력을 분석하고 있습니다...</p></div>`;
+
+  try {
+    const result = await callAI(combined);
+    renderResult(result);
+  } catch (e) {
+    document.getElementById('resultArea').innerHTML = `<div class="error-box">${escHtml(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '변경 이력 분석';
+  }
+}
+
+const IMPACT_LABEL = {
+  high: '영향도 높음',
+  mid: '확인 필요',
+  low: '참고'
+};
+
+function renderResult(r) {
+  let html = '<div class="result">';
+
+  // Headline
+  html += `<div class="headline-box">
+    <div class="label">Change Summary</div>
+    <h2>${escHtml(r.headline || '')}</h2>
+    ${r.contractRef ? `<div class="contract-ref">관련 계약서: ${escHtml(r.contractRef)}</div>` : ''}
+  </div>`;
+
+  // Changes
+  if (r.changes && r.changes.length > 0) {
+    html += `<div class="changes-section"><div class="sec-title">변경 사항 상세</div>`;
+    r.changes.forEach((c, i) => {
+      const impactCls = c.impact || 'mid';
+      html += `<div class="change-card">
+        <div class="change-header">
+          <div class="change-icon">${i + 1}</div>
+          <span class="change-title">${escHtml(c.clause || '')}</span>
+          <span class="impact-badge ${impactCls}">${IMPACT_LABEL[impactCls] || '확인 필요'}</span>
+        </div>
+        <div class="diff-box">
+          <div class="diff-col before">
+            <div class="diff-label before">기존</div>
+            <div class="diff-text">${escHtml(c.before || '')}</div>
+          </div>
+          <div class="diff-col after">
+            <div class="diff-label after">변경</div>
+            <div class="diff-text">${escHtml(c.after || '')}</div>
+          </div>
+        </div>
+        <div class="rationale">
+          <div class="r-label">왜 바꿨나요?</div>
+          <div class="r-text">${escHtml(c.rationale || '')}</div>
+        </div>
+        <div class="biz-check">
+          <div class="b-label">현업 체크포인트</div>
+          <div class="b-text">${escHtml(c.bizCheckpoint || '')}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Summary
+  if (r.summary) {
+    html += `<div class="summary-box">
+      <div class="s-label">한눈에 보는 개정 요약</div>
+      <div class="s-text">${escHtml(r.summary)}</div>
+    </div>`;
+  }
+
+  // Risk Note / Gommon Sense cross-link
+  if (r.riskNote) {
+    html += `<div class="cross-link">
+      <div class="cl-icon">⚡</div>
+      <div class="cl-body">
+        <div class="cl-title">Gommon Sense 연동 안내</div>
+        <div class="cl-desc">${escHtml(r.riskNote)}</div>
+      </div>
+    </div>`;
+  }
+
+  // Disclaimer
+  html += `<div class="disclaimer">AI 기반 계약서 변경 이력 분석 · 정확한 내용은 원문 계약서와 법무팀 확인을 거쳐 주세요</div>`;
+  html += `<span class="reset-btn" onclick="resetAll()">다시 질문하기</span>`;
+  html += `</div>`;
+
+  document.getElementById('resultArea').innerHTML = html;
+  document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function escHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function resetAll() {
+  document.getElementById('userInput').value = '';
+  document.getElementById('docOld').value = '';
+  document.getElementById('docNew').value = '';
+  document.getElementById('resultArea').innerHTML = '';
+  document.getElementById('docArea').classList.remove('open');
+  document.getElementById('docChevron').classList.remove('open');
+  document.getElementById('docToggle').classList.remove('active');
+  document.getElementById('treeSearch').value = '';
+  clearSelection();
+  document.querySelectorAll('.ver-history.open').forEach(e => e.classList.remove('open'));
+  document.querySelectorAll('.ver-toggle.open').forEach(e => e.classList.remove('open'));
+  filterTree();
+  document.getElementById('userInput').focus();
+  toggleBtn();
+}
+
+// ========== CONTRACT TREE ==========
+// versions: [oldest → newest]. Last element = current version.
+// Items without versions array = single version (no revision history).
+const CONTRACT_TREE = [
+  { folder: '일반 [G] — 공통 보증·담보·상환', icon: '📋', items: [
+    { base: 'G00', name: '공문 양식' },
+    { base: 'G01', name: '보증금 계약서' },
+    { base: 'G02', name: '연대보증 계약서 (법인)' },
+    { base: 'G03', name: '연대보증 계약서 (개인)', desc: '최대주주/대표자 개인보증용' },
+    { base: 'G04', name: '(카드) 출금제한 및 매출 집금 특약 동의서' },
+    { base: 'G05', name: '연대보증 계약서 (개인) RMS 연계', desc: 'Risk Management System 연동' },
+    { base: 'GS03', name: '출금제한 특약 부속합의서 — 매출 집금 대상 특정형' },
+    { base: 'GS04', name: '출금제한 특약 부속합의서 — 기간 별도 약정' },
+    { base: 'GS05', name: '출금제한 특약 부속합의서 — 슬라이딩 방식' },
+    { base: 'G06', name: '분할상환 약정서',
+      versions: [
+        { code: 'G06', label: '초기 버전' },
+        { code: 'G06B', label: '기한이익 상실 조항 강화 (1회·일부 연체 시)' },
+      ]},
+    { base: 'G07', name: '자회사/지점 인증서 등록 및 정보 활용 동의서' },
+    { base: 'G08', name: '연대보증계약서 (개인) for RMS 할부판매용' },
+  ]},
+  { folder: 'FUEL [F] — 선정산/한도 서비스', icon: '⚡', items: [
+    { base: 'F53', name: 'FUEL 53일 서비스 이용 계약서',
+      versions: [
+        { code: 'F53', label: '초기 — 자동연장 조항 신설' },
+        { code: 'F53A', label: '수수료 면제 프로모션 추가' },
+        { code: 'F53B', label: '카드 혼용금지·연체 시 이용제한' },
+        { code: 'F53C', label: '페이백 제외 가산수수료 도입' },
+        { code: 'F53D', label: '수수료 체계 조정' },
+        { code: 'F53E', label: '미니멈개런티 조항 도입' },
+        { code: 'F53F', label: '프로모션 종료·수수료 상향(2.0%)·긴급신청 미니멈개런티' },
+      ]},
+    { base: 'F53-S01', name: '수수료 면제 프로모션 별지' },
+    { base: 'FS02', name: '출금제한 및 매출 집금 특약', desc: '웰컴저축은행 연계, FUEL 공통' },
+    { base: 'FS03', name: '출금제한 특약 부속합의서 — 매출 집금 대상 특정' },
+    { base: 'FS04', name: '출금제한 특약 부속합의서 — 기간 별도' },
+    { base: 'FS05', name: '출금제한 특약 부속합의서 — 슬라이딩' },
+    { base: 'F61', name: 'FUEL 61일 상품',
+      versions: [
+        { code: 'F61A', label: '익익월 1일 납부, 수수료 1.3%, 페이백 X' },
+      ]},
+    { base: 'F83', name: 'FUEL 83일 상품',
+      versions: [
+        { code: 'F83', label: '초기 — 익익월 납부 구조' },
+        { code: 'F83A', label: '출금제한 조항 고객 이슈 후 표현 완화' },
+        { code: 'F83B', label: '수수료 체계 조정' },
+        { code: 'F83C', label: '가산수수료 도입' },
+        { code: 'F83D', label: '가산수수료 2.5%·가장거래/카드깡 금지' },
+      ]},
+    { base: 'F87', name: 'FUEL 87일 상품',
+      versions: [
+        { code: 'F87A', label: '신한카드, 익익월 27일 납부, 페이백 X' },
+      ]},
+    { base: 'F01', name: 'B2B 카드결제 송금 대행 위수탁 계약서', desc: 'Pay by Card' },
+    { base: 'F02', name: '글로벌 정산대행 서비스 이용계약서 (국문)', desc: '해외 외화대금 수취 거래처용' },
+    { base: 'F02E', name: '글로벌 정산대행 서비스 이용계약서 (영문)' },
+    { base: 'F02-P', name: '글로벌 정산대행 플랫폼 버전 (국문)' },
+    { base: 'F02E-P', name: '글로벌 정산대행 플랫폼 버전 (영문)' },
+    { base: 'F03', name: 'PBC 글로벌 송금 위수탁 계약서', desc: '국내 위탁자용' },
+    { base: 'F11', name: '채권근담보권 설정계약서', desc: '광고 대행업' },
+  ]},
+  { folder: 'VWS [V] — 구매대행/위탁판매/매매', icon: '📦', items: [
+    { base: 'V01', name: '구매대행 계약서' },
+    { base: 'V02', name: '위탁판매 계약서',
+      versions: [
+        { code: 'V02', label: '초기 버전' },
+        { code: 'V02A', label: '기준금액 정의 도입' },
+        { code: 'V02B', label: '우선순위 명문화·자동연장·금전항목 일원화' },
+      ]},
+    { base: 'V03', name: '매입(마스터) 물품 매매계약서',
+      versions: [
+        { code: 'V03', label: '초기 — PG 수수료 전가 조항' },
+        { code: 'V03A', label: '마스터 계약 전환' },
+        { code: 'V03B', label: '계약 구조 정비' },
+        { code: 'V03C', label: '1년 마스터 + 1개월 자동연장' },
+      ]},
+    { base: 'VS01', name: '고위드 판매 물품 매매계약서',
+      versions: [
+        { code: 'VS01', label: '초기 버전' },
+        { code: 'VS01A', label: '조항 정비' },
+        { code: 'VS01B', label: '수수료 구조 변경' },
+        { code: 'VS01C', label: '현행 — 최종 정비' },
+      ]},
+    { base: 'VS02', name: '고위드 매입 물품 매매계약서', desc: 'PG 수수료 매도인 부담 (제3조 제3항)' },
+    { base: 'V04', name: '물품인수증 (인도확인서)' },
+    { base: 'VS03', name: 'VWS 출금제한 특약 부속합의서 1' },
+    { base: 'VS04', name: 'VWS 출금제한 특약 부속합의서 2' },
+    { base: 'V11', name: '구매대행 계약서 (신규)',
+      versions: [
+        { code: 'V11', label: '초기 버전' },
+        { code: 'V11A', label: '조항 정비' },
+        { code: 'V11B', label: '현행 — 최종 개정' },
+      ]},
+  ]},
+  { folder: 'ENGINE [E] — 렌탈/할부', icon: '⚙️', items: [
+    { base: 'E01', name: '엔진 연대보증 (재리스/렌탈)' },
+    { base: 'E02', name: '엔진 연대보증 (할부판매)' },
+    { base: 'E03', name: '엔진 연대보증 (통합 포괄형)', desc: '추가 실행 시 합산' },
+  ]},
+  { folder: '구독 [S] — IT 렌탈/구독', icon: '💻', items: [
+    { base: 'S02', name: 'IT 기기 매입 계약서' },
+    { base: 'S03', name: '블리스 멤버십 계약서', desc: '커피머신+원두' },
+    { base: 'S04', name: '계약 인수 합의서' },
+    { base: 'S05', name: 'IT 장비 구매 계약 동의서' },
+  ]},
+];
+
+// --- Helpers ---
+function escAttr(s) {
+  return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function getCurrentCode(item) {
+  if (!item.versions) return item.base;
+  return item.versions[item.versions.length - 1].code;
+}
+
+function getCurrentLabel(item) {
+  if (!item.versions) return '';
+  return item.versions[item.versions.length - 1].label;
+}
+
+function hasVersions(item) {
+  return item.versions && item.versions.length > 1;
+}
+
+// --- Render ---
+function renderTree() {
+  const body = document.getElementById('treeBody');
+  let totalCount = 0;
+  let html = '';
+
+  CONTRACT_TREE.forEach((group, gi) => {
+    totalCount += group.items.length;
+    html += `<div class="tree-folder" data-folder="${gi}">
+      <div class="folder-header" onclick="toggleFolder(${gi})">
+        <span class="folder-chevron" id="fc${gi}">▶</span>
+        <span class="folder-icon">${group.icon}</span>
+        <span class="folder-name">${escHtml(group.folder)}</span>
+        <span class="folder-count">${group.items.length}</span>
+      </div>
+      <div class="folder-items" id="fi${gi}">`;
+
+    group.items.forEach((item, ii) => {
+      const uid = `${gi}-${ii}`;
+      const curCode = getCurrentCode(item);
+      const curLabel = getCurrentLabel(item);
+      const multiVer = hasVersions(item);
+      const searchTerms = [item.base, curCode, item.name, item.desc || '', curLabel].join(' ').toLowerCase();
+
+      html += `<div class="tree-item-wrap" data-search="${escHtml(searchTerms)}">`;
+
+      // Main row: base code → current version
+      html += `<div class="tree-item" data-code="${curCode}" data-base="${item.base}" onclick="selectContract(this, '${curCode}', '${escAttr(item.name)}')">`;
+      html += `<span class="item-code">${escHtml(item.base)}</span>`;
+      html += `<span class="item-name">${escHtml(item.name)}</span>`;
+
+      if (multiVer) {
+        html += `<span class="item-current">${escHtml(curCode)}</span>`;
+        html += `<span class="ver-toggle" onclick="event.stopPropagation();toggleVersions('${uid}',this)">`;
+        html += `<span class="ver-chevron">▶</span> ${item.versions.length}v</span>`;
+      }
+      html += `</div>`;
+
+      // Version history (hidden by default)
+      if (multiVer) {
+        html += `<div class="ver-history" id="vh${uid}">`;
+        item.versions.forEach((v, vi) => {
+          const isCurrent = vi === item.versions.length - 1;
+          html += `<div class="ver-item${isCurrent ? ' current-ver' : ''}" onclick="selectVersion(this, '${v.code}', '${escAttr(item.name)}', ${isCurrent})">`;
+          html += `<span class="vi-code">${escHtml(v.code)}</span>`;
+          html += `<span class="vi-name">${escHtml(v.label)}</span>`;
+          if (isCurrent) {
+            html += `<span style="font-size:9px;color:var(--green);font-weight:700;padding:1px 5px;border:1px solid rgba(105,219,124,.2);border-radius:3px">현행</span>`;
+          } else {
+            html += `<span class="vi-old">이전</span>`;
+          }
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
+
+      html += `</div>`; // tree-item-wrap
+    });
+
+    html += `</div></div>`;
+  });
+
+  body.innerHTML = html;
+  document.getElementById('treeCount').textContent = totalCount + '개';
+}
+
+// --- Interactions ---
+function toggleTree() {
+  const panel = document.getElementById('treePanel');
+  const chevron = document.getElementById('treeChevron');
+  const toggle = document.getElementById('treeToggle');
+  const isOpen = panel.classList.toggle('open');
+  chevron.classList.toggle('open', isOpen);
+  toggle.classList.toggle('active', isOpen);
+  if (isOpen) document.getElementById('treeSearch').focus();
+}
+
+function toggleFolder(idx) {
+  const items = document.getElementById('fi' + idx);
+  const chevron = document.getElementById('fc' + idx);
+  const isOpen = items.classList.toggle('open');
+  chevron.classList.toggle('open', isOpen);
+}
+
+function toggleVersions(uid, btn) {
+  const hist = document.getElementById('vh' + uid);
+  const isOpen = hist.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+}
+
+function clearSelection() {
+  document.querySelectorAll('.tree-item.selected').forEach(e => e.classList.remove('selected'));
+  document.querySelectorAll('.ver-item.selected').forEach(e => e.classList.remove('selected'));
+}
+
+function selectContract(el, code, name) {
+  clearSelection();
+  el.classList.add('selected');
+  const input = document.getElementById('userInput');
+  input.value = `[${code}] ${name}의 변경 이력과 개정 취지를 알려 주세요`;
+  input.focus();
+  toggleBtn();
+}
+
+function selectVersion(el, code, name, isCurrent) {
+  clearSelection();
+  el.classList.add('selected');
+  // Also highlight the parent tree-item row
+  const wrap = el.closest('.tree-item-wrap');
+  if (wrap) wrap.querySelector('.tree-item').classList.add('selected');
+
+  const input = document.getElementById('userInput');
+  if (isCurrent) {
+    input.value = `[${code}] ${name} 현행 버전의 변경 이력과 개정 취지를 알려 주세요`;
+  } else {
+    input.value = `[${code}] ${name}에서 이 버전(${code})이 어떻게 바뀌었는지, 이후 개정 사항과 비교해서 알려 주세요`;
+  }
+  input.focus();
+  toggleBtn();
+}
+
+function filterTree() {
+  const query = document.getElementById('treeSearch').value.trim().toLowerCase();
+
+  CONTRACT_TREE.forEach((group, gi) => {
+    const folderItems = document.getElementById('fi' + gi);
+    const chevron = document.getElementById('fc' + gi);
+    let folderHasVisible = false;
+
+    folderItems.querySelectorAll('.tree-item-wrap').forEach(wrap => {
+      const terms = wrap.dataset.search || '';
+      const match = !query || terms.includes(query);
+      wrap.classList.toggle('hidden-item', !match);
+      if (match) folderHasVisible = true;
+    });
+
+    if (query && folderHasVisible) {
+      folderItems.classList.add('open');
+      chevron.classList.add('open');
+    } else if (!query) {
+      folderItems.classList.remove('open');
+      chevron.classList.remove('open');
+    }
+
+    const folder = folderItems.closest('.tree-folder');
+    folder.style.display = (query && !folderHasVisible) ? 'none' : '';
+  });
+}
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  renderTree();
+  if (localStorage.getItem('gotrack_gemini_key')) {
+    document.getElementById('apiSection').classList.add('hidden');
+    document.getElementById('apiStatus').classList.remove('hidden');
+  }
+  toggleBtn();
+});
+
+// Ctrl+Enter to scan
+document.getElementById('userInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    if (!document.getElementById('scanBtn').disabled) scan();
+  }
+});
+</script>
+<script src="auth-gate.js"></script>
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go_track Lookup — 현행 계약서 빠른 조회</title>
+<style>
+  :root{--bg:#0f0f14;--card:#1a1a24;--accent:#6ec8a0;--accent-dim:rgba(110,200,160,.15);--green:#69db7c;--green-bg:rgba(105,219,124,.10);--yellow:#ffd43b;--red:#ff6b6b;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:10px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.6;min-height:100vh}
+  .wrap{max-width:640px;margin:0 auto;padding:20px}
+
+  header{padding:28px 0 20px;text-align:center;border-bottom:1px solid var(--t15)}
+  header h1{font-size:22px;font-weight:700;color:var(--t50)}
+  header h1 span{color:var(--accent)}
+  header .ver{font-size:11px;color:var(--accent);font-weight:600;margin-left:4px;vertical-align:super}
+  header p{font-size:12px;color:var(--t60);margin-top:4px}
+
+  /* Connection status */
+  .conn-bar{margin-top:16px;padding:10px 16px;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:8px}
+  .conn-bar.ok{background:var(--green-bg);border:1px solid rgba(105,219,124,.2);color:var(--green)}
+  .conn-bar.err{background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);color:var(--red)}
+  .conn-bar.loading{background:var(--t08);border:1px solid var(--t15);color:var(--t60)}
+  .conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .conn-bar.ok .conn-dot{background:var(--green)}
+  .conn-bar.err .conn-dot{background:var(--red)}
+  .conn-bar.loading .conn-dot{background:var(--t30);animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  .conn-bar .conn-action{margin-left:auto;background:none;border:1px solid currentColor;border-radius:5px;padding:3px 10px;font-size:11px;color:inherit;cursor:pointer;font-family:inherit}
+  .conn-bar .conn-action:hover{opacity:.8}
+
+  /* Setup */
+  .setup-card{margin-top:16px;background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:20px}
+  .setup-card h3{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--t50)}
+  .setup-card p{font-size:12px;color:var(--t60);margin-bottom:12px;line-height:1.6}
+  .setup-card code{background:var(--t08);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--accent)}
+  .setup-card .step{margin-bottom:12px;padding-left:24px;position:relative;font-size:12px;color:var(--t60);line-height:1.7}
+  .setup-card .step::before{content:attr(data-n);position:absolute;left:0;top:1px;width:18px;height:18px;background:var(--accent-dim);color:var(--accent);border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .setup-card .script-box{background:#111;border:1px solid var(--t15);border-radius:8px;padding:14px;margin:12px 0;position:relative}
+  .setup-card .script-box pre{font-size:11px;color:var(--t60);line-height:1.6;white-space:pre-wrap;font-family:'SF Mono','Consolas',monospace;overflow-x:auto}
+  .setup-card .copy-script{position:absolute;top:8px;right:8px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:5px;padding:4px 10px;font-size:10px;color:var(--accent);cursor:pointer;font-family:inherit}
+  .setup-card .copy-script:hover{background:var(--accent);color:#111}
+  .url-row{display:flex;gap:8px;align-items:center}
+  .url-row input{flex:1;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:13px;font-family:inherit;background:var(--t08);color:var(--t50)}
+  .url-row input:focus{outline:none;border-color:var(--accent)}
+  .url-row button{padding:10px 18px;background:var(--accent);border:none;border-radius:8px;font-size:13px;font-weight:600;color:#111;cursor:pointer;white-space:nowrap;font-family:inherit}
+  .url-row button:hover{opacity:.9}
+  .hidden{display:none!important}
+
+  /* Search */
+  .search-box{margin-top:16px;position:relative}
+  .search-box input{width:100%;padding:14px 16px 14px 42px;background:var(--card);border:1.5px solid var(--t15);border-radius:var(--r);font-size:15px;font-family:inherit;color:var(--t50);transition:border-color .2s}
+  .search-box input:focus{outline:none;border-color:var(--accent)}
+  .search-box input::placeholder{color:var(--t30)}
+  .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--t30);pointer-events:none}
+  .search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t30);font-size:18px;cursor:pointer;display:none;padding:4px}
+  .search-clear:hover{color:var(--t60)}
+  .search-clear.show{display:block}
+  .result-count{font-size:11px;color:var(--t30);margin-top:8px;text-align:right}
+
+  /* Category tabs */
+  .tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+  .tab{font-size:12px;padding:5px 14px;border:1px solid var(--t15);border-radius:20px;cursor:pointer;background:transparent;color:var(--t60);font-weight:500;transition:all .15s}
+  .tab:hover{border-color:var(--accent);color:var(--accent)}
+  .tab.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);font-weight:600}
+
+  /* Contract list */
+  .list{margin-top:16px;display:flex;flex-direction:column;gap:4px}
+  .row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--t15);border-radius:8px;transition:all .15s;cursor:default}
+  .row:hover{border-color:var(--t30);background:var(--t08)}
+  .row.hidden{display:none}
+  .row .r-base{font-size:12px;font-weight:700;color:var(--t30);min-width:44px;font-family:'SF Mono','Consolas',monospace}
+  .row .r-arrow{color:var(--t15);font-size:10px;flex-shrink:0}
+  .row .r-current{font-size:13px;font-weight:700;color:var(--accent);min-width:52px;font-family:'SF Mono','Consolas',monospace}
+  .row .r-name{font-size:13px;color:var(--t80);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .r-badge{font-size:9px;color:var(--green);font-weight:700;padding:2px 6px;border:1px solid rgba(105,219,124,.2);border-radius:3px;flex-shrink:0}
+  .row .r-norev{font-size:9px;color:var(--t30);padding:2px 6px;border:1px solid var(--t08);border-radius:3px;flex-shrink:0}
+  .row .r-open{background:none;border:1px solid var(--accent);border-radius:5px;padding:4px 12px;font-size:11px;color:var(--accent);cursor:pointer;transition:all .15s;flex-shrink:0;font-family:inherit;text-decoration:none;font-weight:600}
+  .row .r-open:hover{background:var(--accent);color:#111}
+  .row .r-nolink{background:none;border:1px solid var(--t08);border-radius:5px;padding:4px 12px;font-size:11px;color:var(--t30);flex-shrink:0;font-family:inherit;cursor:default}
+
+  .empty{text-align:center;padding:40px 20px;color:var(--t30);font-size:14px}
+  .footer{margin-top:24px;text-align:center;font-size:11px;color:var(--t30);line-height:1.6}
+  .footer a{color:var(--accent);text-decoration:none}
+
+  @media(max-width:600px){.wrap{padding:12px}.row{flex-wrap:wrap;gap:6px}.row .r-name{min-width:100%;order:10;margin-top:2px}.url-row{flex-direction:column}}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>Go</span>_track <span class="ver">Lookup</span></h1>
+  <p>현행 계약서 빠른 조회 &middot; Google Docs 바로 열기</p>
+</header>
+<div class="wrap">
+
+  <!-- Connection status -->
+  <div class="conn-bar loading" id="connBar">
+    <span class="conn-dot"></span>
+    <span id="connMsg">연결 확인 중...</span>
+    <button class="conn-action" id="connAction" onclick="showSetup()">설정</button>
+  </div>
+
+  <!-- Setup (hidden by default if already connected) -->
+  <div class="setup-card hidden" id="setupCard">
+    <h3>Google Sheets 연동 설정</h3>
+    <p>스프레드시트의 계약서 링크를 자동으로 불러옵니다. 최초 1회만 설정하면 됩니다.</p>
+
+    <div class="step" data-n="1">스프레드시트에서 <code>확장 프로그램</code> → <code>Apps Script</code></div>
+    <div class="step" data-n="2">기존 코드를 지우고 아래 스크립트를 붙여넣은 후 저장 (Ctrl+S)</div>
+
+    <div class="script-box">
+      <button class="copy-script" onclick="copyScript(this)">복사</button>
+      <pre id="scriptCode"></pre>
+    </div>
+
+    <div class="step" data-n="3"><code>배포</code> → <code>새 배포</code> → 유형: <code>웹 앱</code> → 액세스: <code>모든 사용자</code> → 배포</div>
+    <div class="step" data-n="4">생성된 URL을 아래에 붙여넣기</div>
+
+    <div class="url-row">
+      <input type="text" id="endpointInput" placeholder="https://script.google.com/macros/s/.../exec">
+      <button onclick="saveEndpoint()">연결</button>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div id="mainContent" class="hidden">
+    <div class="search-box">
+      <span class="search-icon">&#x1F50D;</span>
+      <input type="text" id="q" placeholder="계약서 코드 또는 이름으로 검색" oninput="filter()" autofocus>
+      <button class="search-clear" id="clearBtn" onclick="clearSearch()">&#x2715;</button>
+    </div>
+    <div class="result-count" id="countLabel"></div>
+
+    <div class="tabs" id="tabs"></div>
+    <div class="list" id="list"></div>
+    <div class="empty hidden" id="empty">검색 결과가 없습니다</div>
+  </div>
+
+  <div class="footer">
+    Go_track Lookup &middot; 상세 변경 이력은 <a href="gotrack-v1.0.html">Go_track v1.0</a>에서 확인
+  </div>
+</div>
+
+<script>
+// ========== Apps Script (to be pasted into the spreadsheet) ==========
+const APPS_SCRIPT = `function doGet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // "Link" 탭을 먼저 찾고, 없으면 첫 번째 시트 사용
+  var sheet = ss.getSheetByName("Link");
+  if (!sheet) sheet = ss.getSheetByName("link");
+  if (!sheet) sheet = ss.getSheets()[0];
+
+  var data = sheet.getDataRange();
+  var rows = data.getNumRows();
+  var cols = data.getNumColumns();
+  var richTexts = data.getRichTextValues();
+  var values = data.getValues();
+
+  var result = [];
+  for (var r = 0; r < rows; r++) {
+    // Link 열 (6번째 열, index 5) 에서 하이퍼링크 추출
+    var baseCode = String(values[r][1]).trim();
+    var title = String(values[r][2]).trim();
+    var linkCell = richTexts[r][5];
+    var displayText = String(values[r][5]).trim();
+
+    // 헤더/섹션 행 스킵
+    if (!baseCode || baseCode === "Code" || !displayText || displayText === "Link") continue;
+    if (["ENGINE","FUEL","vws","구독","vws+FUEL","참고"].includes(baseCode)) continue;
+
+    var url = "";
+    if (linkCell) {
+      var runs = linkCell.getRuns();
+      for (var i = 0; i < runs.length; i++) {
+        var u = runs[i].getLinkUrl();
+        if (u) { url = u; break; }
+      }
+    }
+
+    result.push({
+      base: baseCode,
+      title: title,
+      current: displayText,
+      url: url
+    });
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+// ========== State ==========
+let LINK_DATA = [];   // [{base, title, current, url}, ...] from Apps Script
+let activeCat = 'all';
+
+const CATS = [
+  { key:'all', label:'전체' },
+  { key:'G', label:'일반 [G]' },
+  { key:'F', label:'FUEL [F]' },
+  { key:'V', label:'VWS [V]' },
+  { key:'E', label:'엔진 [E]' },
+  { key:'S', label:'구독 [S]' },
+];
+
+// ========== Init ==========
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('scriptCode').textContent = APPS_SCRIPT;
+  initTabs();
+
+  const endpoint = localStorage.getItem('gotrack_endpoint');
+  if (endpoint) {
+    fetchData(endpoint);
+  } else {
+    setConn('err', '연동이 설정되지 않았습니다');
+    showSetup();
+  }
+});
+
+// ========== Connection ==========
+function setConn(state, msg) {
+  const bar = document.getElementById('connBar');
+  const msgEl = document.getElementById('connMsg');
+  bar.className = 'conn-bar ' + state;
+  msgEl.textContent = msg;
+}
+
+function showSetup() {
+  document.getElementById('setupCard').classList.remove('hidden');
+  const existing = localStorage.getItem('gotrack_endpoint');
+  if (existing) document.getElementById('endpointInput').value = existing;
+}
+
+function hideSetup() {
+  document.getElementById('setupCard').classList.add('hidden');
+}
+
+function saveEndpoint() {
+  const url = document.getElementById('endpointInput').value.trim();
+  if (!url) return;
+  localStorage.setItem('gotrack_endpoint', url);
+  fetchData(url);
+}
+
+async function fetchData(endpoint) {
+  setConn('loading', '스프레드시트 연결 중...');
+  try {
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    LINK_DATA = data;
+    setConn('ok', LINK_DATA.length + '개 계약서 연동됨');
+    document.getElementById('connAction').textContent = '재설정';
+    hideSetup();
+    document.getElementById('mainContent').classList.remove('hidden');
+    render();
+  } catch (e) {
+    setConn('err', '연결 실패: ' + e.message);
+    showSetup();
+  }
+}
+
+// ========== Helpers ==========
+function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function getCat(base) {
+  if (/^G/i.test(base)) return 'G';
+  if (/^F/i.test(base)) return 'F';
+  if (/^V/i.test(base)) return 'V';
+  if (/^E/i.test(base)) return 'E';
+  if (/^S/i.test(base)) return 'S';
+  return '';
+}
+
+// ========== Tabs ==========
+function initTabs() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = CATS.map(c =>
+    `<div class="tab${c.key==='all'?' active':''}" data-cat="${c.key}" onclick="setCat('${c.key}',this)">${c.label}</div>`
+  ).join('');
+}
+
+function setCat(key, el) {
+  activeCat = key;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// ========== Render ==========
+function render() {
+  const list = document.getElementById('list');
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const clearBtn = document.getElementById('clearBtn');
+  clearBtn.classList.toggle('show', q.length > 0);
+
+  let html = '';
+  let count = 0;
+
+  LINK_DATA.forEach((d, i) => {
+    const cat = getCat(d.base);
+    const catMatch = activeCat === 'all' || cat === activeCat;
+    const terms = [d.base, d.current, d.title].join(' ').toLowerCase();
+    const qMatch = !q || terms.includes(q);
+    const visible = catMatch && qMatch;
+
+    if (!visible) return;
+    count++;
+
+    const revised = d.base !== d.current;
+    const hasUrl = !!d.url;
+
+    html += `<div class="row">`;
+    html += `<span class="r-base">${esc(d.base)}</span>`;
+    if (revised) {
+      html += `<span class="r-arrow">→</span>`;
+      html += `<span class="r-current">${esc(d.current)}</span>`;
+    }
+    html += `<span class="r-name">${esc(d.title)}</span>`;
+    if (revised) {
+      html += `<span class="r-badge">현행</span>`;
+    } else {
+      html += `<span class="r-norev">단일</span>`;
+    }
+    if (hasUrl) {
+      html += `<a class="r-open" href="${esc(d.url)}" target="_blank" rel="noopener">열기</a>`;
+    } else {
+      html += `<span class="r-nolink">링크 없음</span>`;
+    }
+    html += `</div>`;
+  });
+
+  list.innerHTML = html;
+  document.getElementById('countLabel').textContent = count + '건';
+  document.getElementById('empty').classList.toggle('hidden', count > 0);
+  if (count === 0 && LINK_DATA.length > 0) {
+    document.getElementById('empty').classList.remove('hidden');
+  }
+}
+
+function filter() { render(); }
+
+function clearSearch() {
+  document.getElementById('q').value = '';
+  document.getElementById('q').focus();
+  render();
+}
+
+function copyScript(btn) {
+  navigator.clipboard.writeText(APPS_SCRIPT).then(() => {
+    btn.textContent = '복사됨!';
+    setTimeout(() => { btn.textContent = '복사'; }, 1500);
+  });
+}
+</script>
+<script src="auth-gate.js"></script>
+</body>
+</html>

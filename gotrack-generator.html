@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go_track Generator — 계약서 자동 생성</title>
+<style>
+  :root{--bg:#0f0f14;--card:#1a1a24;--accent:#6ec8a0;--accent-dim:rgba(110,200,160,.15);--green:#69db7c;--green-bg:rgba(105,219,124,.10);--yellow:#ffd43b;--yellow-bg:rgba(255,212,59,.10);--red:#ff6b6b;--red-bg:rgba(255,107,107,.08);--blue:#74c0fc;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
+  .wrap{max-width:680px;margin:0 auto;padding:20px}
+
+  header{padding:28px 0 20px;text-align:center;border-bottom:1px solid var(--t15)}
+  header h1{font-size:22px;font-weight:700;color:var(--t50)}
+  header h1 span{color:var(--accent)}
+  header .ver{font-size:11px;color:var(--accent);font-weight:600;margin-left:4px;vertical-align:super}
+  header p{font-size:12px;color:var(--t60);margin-top:4px}
+  header .sub{font-size:11px;color:var(--t30);margin-top:2px}
+
+  /* Steps indicator */
+  .steps-bar{display:flex;align-items:center;gap:0;margin-top:20px;padding:0 10px}
+  .step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid var(--t15);color:var(--t30);flex-shrink:0;transition:all .3s}
+  .step-dot.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+  .step-dot.done{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+  .step-line{flex:1;height:2px;background:var(--t15);transition:background .3s}
+  .step-line.done{background:var(--green)}
+  .step-labels{display:flex;justify-content:space-between;padding:6px 0 0;font-size:11px;color:var(--t30)}
+  .step-labels span{text-align:center;flex:1}
+  .step-labels span.active{color:var(--accent);font-weight:600}
+
+  /* Connection bar */
+  .conn-bar{margin-top:16px;padding:10px 16px;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:8px}
+  .conn-bar.ok{background:var(--green-bg);border:1px solid rgba(105,219,124,.2);color:var(--green)}
+  .conn-bar.err{background:var(--red-bg);border:1px solid rgba(255,107,107,.2);color:var(--red)}
+  .conn-bar.loading{background:var(--t08);border:1px solid var(--t15);color:var(--t60)}
+  .conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .conn-bar.ok .conn-dot{background:var(--green)}
+  .conn-bar.err .conn-dot{background:var(--red)}
+  .conn-bar.loading .conn-dot{background:var(--t30);animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  .conn-bar .conn-action{margin-left:auto;background:none;border:1px solid currentColor;border-radius:5px;padding:3px 10px;font-size:11px;color:inherit;cursor:pointer;font-family:inherit}
+
+  /* Setup */
+  .setup-card{margin-top:16px;background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:20px}
+  .setup-card h3{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--t50)}
+  .setup-card p{font-size:12px;color:var(--t60);margin-bottom:12px;line-height:1.6}
+  .setup-card code{background:var(--t08);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--accent)}
+  .setup-card .step-guide{margin-bottom:10px;padding-left:24px;position:relative;font-size:12px;color:var(--t60);line-height:1.7}
+  .setup-card .step-guide::before{content:attr(data-n);position:absolute;left:0;top:1px;width:18px;height:18px;background:var(--accent-dim);color:var(--accent);border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .setup-card .script-box{background:#111;border:1px solid var(--t15);border-radius:8px;padding:14px;margin:12px 0;position:relative;max-height:300px;overflow-y:auto}
+  .setup-card .script-box pre{font-size:11px;color:var(--t60);line-height:1.5;white-space:pre-wrap;font-family:'SF Mono','Consolas',monospace}
+  .setup-card .copy-script{position:sticky;top:0;float:right;background:var(--accent-dim);border:1px solid var(--accent);border-radius:5px;padding:4px 10px;font-size:10px;color:var(--accent);cursor:pointer;font-family:inherit;z-index:1}
+  .setup-card .copy-script:hover{background:var(--accent);color:#111}
+  .url-row{display:flex;gap:8px;align-items:center}
+  .url-row input{flex:1;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:13px;font-family:inherit;background:var(--t08);color:var(--t50)}
+  .url-row input:focus{outline:none;border-color:var(--accent)}
+  .url-row button{padding:10px 18px;background:var(--accent);border:none;border-radius:8px;font-size:13px;font-weight:600;color:#111;cursor:pointer;white-space:nowrap;font-family:inherit}
+  .hidden{display:none!important}
+
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:24px;margin-top:16px}
+  .card h3{font-size:15px;font-weight:600;margin-bottom:4px;color:var(--t50)}
+  .card .card-hint{font-size:12px;color:var(--t60);margin-bottom:16px}
+
+  /* Contract selector */
+  .contract-search{width:100%;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:14px;font-family:inherit;background:var(--t08);color:var(--t50);margin-bottom:8px}
+  .contract-search:focus{outline:none;border-color:var(--accent)}
+  .contract-search::placeholder{color:var(--t30)}
+  .contract-list{max-height:240px;overflow-y:auto;border:1px solid var(--t15);border-radius:8px;background:var(--t08)}
+  .contract-list::-webkit-scrollbar{width:5px}
+  .contract-list::-webkit-scrollbar-thumb{background:var(--t15);border-radius:3px}
+  .cl-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--t08)}
+  .cl-item:last-child{border-bottom:none}
+  .cl-item:hover{background:var(--accent-dim)}
+  .cl-item.selected{background:var(--accent-dim);border-left:3px solid var(--accent)}
+  .cl-item .cli-code{font-size:12px;font-weight:700;color:var(--accent);min-width:56px;font-family:'SF Mono','Consolas',monospace}
+  .cl-item .cli-name{font-size:12px;color:var(--t60);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cl-item .cli-badge{font-size:9px;color:var(--green);font-weight:700;padding:1px 5px;border:1px solid rgba(105,219,124,.2);border-radius:3px}
+  .cl-item.cli-hidden{display:none}
+  .cl-empty{padding:20px;text-align:center;font-size:12px;color:var(--t30)}
+
+  /* Selected contract display */
+  .selected-contract{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;margin-bottom:16px}
+  .selected-contract .sc-code{font-size:14px;font-weight:700;color:var(--accent);font-family:'SF Mono','Consolas',monospace}
+  .selected-contract .sc-name{font-size:13px;color:var(--t80);flex:1}
+  .selected-contract .sc-change{font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline;flex-shrink:0}
+
+  /* Form */
+  .form-section{margin-top:4px}
+  .form-group{margin-bottom:14px}
+  .form-group label{display:block;font-size:12px;font-weight:600;color:var(--t60);margin-bottom:4px}
+  .form-group label .req{color:var(--red);margin-left:2px}
+  .form-group input,.form-group select{width:100%;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:14px;font-family:inherit;background:var(--t08);color:var(--t50);transition:border-color .2s}
+  .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--accent)}
+  .form-group input::placeholder{color:var(--t30)}
+  .form-group select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+  .form-group select option{background:var(--card);color:var(--t50)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-divider{border:none;border-top:1px solid var(--t08);margin:18px 0}
+  .form-section-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:12px}
+
+  /* Buttons */
+  .btn-primary{width:100%;padding:14px;background:var(--accent);color:#111;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.3px;font-family:inherit}
+  .btn-primary:hover{opacity:.9;box-shadow:0 0 20px rgba(110,200,160,.3)}
+  .btn-primary:disabled{background:var(--t15);color:var(--t30);cursor:not-allowed;box-shadow:none}
+  .btn-row{display:flex;gap:10px;margin-top:16px}
+  .btn-secondary{flex:1;padding:12px;background:var(--t08);color:var(--t60);border:1px solid var(--t15);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-download{flex:2;padding:12px;background:var(--accent);color:#111;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+  .btn-download:hover{opacity:.9;box-shadow:0 0 20px rgba(110,200,160,.3)}
+
+  /* Preview */
+  .preview-info{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .preview-row{display:flex;gap:8px;font-size:13px}
+  .preview-row .pr-label{color:var(--t30);min-width:100px;flex-shrink:0}
+  .preview-row .pr-value{color:var(--t80);font-weight:500}
+
+  /* Result */
+  .result-card{background:linear-gradient(135deg,var(--card) 0%,rgba(110,200,160,.08) 100%);border:1px solid var(--accent);border-radius:var(--r);padding:24px;margin-top:16px;text-align:center}
+  .result-card .rc-icon{font-size:32px;margin-bottom:8px}
+  .result-card h3{font-size:18px;font-weight:700;color:var(--t50);margin-bottom:4px}
+  .result-card p{font-size:13px;color:var(--t60);margin-bottom:16px}
+
+  /* Loading overlay */
+  .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,15,20,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+  .spinner{width:40px;height:40px;border:3px solid var(--t15);border-top:3px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-overlay p{font-size:14px;color:var(--t60)}
+  .loading-overlay .loading-sub{font-size:12px;color:var(--t30);margin-top:4px}
+
+  .error-box{margin-top:16px;padding:14px 18px;background:var(--red-bg);border:1px solid rgba(255,107,107,.25);border-radius:var(--r);font-size:13px;color:var(--red)}
+
+  .footer{margin-top:24px;text-align:center;font-size:11px;color:var(--t30);line-height:1.6}
+  .footer a{color:var(--accent);text-decoration:none}
+  .disclaimer{margin-top:16px;font-size:11px;color:var(--t30);text-align:center;line-height:1.6}
+
+  @media(max-width:600px){.wrap{padding:12px}.card{padding:18px}.form-row{grid-template-columns:1fr}.url-row{flex-direction:column}.btn-row{flex-direction:column}.btn-download,.btn-secondary{flex:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>Go</span>_track <span class="ver">Generator</span></h1>
+  <p>표준 계약서 자동 생성 &middot; 법인정보 입력 → PDF 추출</p>
+  <div class="sub">Gommon Sense Spin-off &middot; 휴먼에러 방지 &middot; 표준 양식 유지</div>
+</header>
+<div class="wrap">
+
+  <!-- Steps -->
+  <div class="steps-bar" id="stepsBar">
+    <div class="step-dot active" id="sd1">1</div>
+    <div class="step-line" id="sl1"></div>
+    <div class="step-dot" id="sd2">2</div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step-dot" id="sd3">3</div>
+  </div>
+  <div class="step-labels">
+    <span class="active" id="slbl1">계약서 선택</span>
+    <span id="slbl2">법인정보 입력</span>
+    <span id="slbl3">확인 & 생성</span>
+  </div>
+
+  <!-- Connection -->
+  <div class="conn-bar loading" id="connBar">
+    <span class="conn-dot"></span>
+    <span id="connMsg">연결 확인 중...</span>
+    <button class="conn-action" id="connAction" onclick="showSetup()">설정</button>
+  </div>
+
+  <!-- Setup -->
+  <div class="setup-card hidden" id="setupCard">
+    <h3>Google Sheets & Docs 연동 설정</h3>
+    <p>스프레드시트에서 계약서 템플릿을 불러오고, 법인정보를 채워 PDF로 생성합니다. 최초 1회 설정이 필요합니다.</p>
+
+    <div class="step-guide" data-n="1">스프레드시트에서 <code>확장 프로그램</code> → <code>Apps Script</code></div>
+    <div class="step-guide" data-n="2">기존 코드를 지우고 아래 스크립트를 붙여넣은 후 저장</div>
+
+    <div class="script-box">
+      <button class="copy-script" onclick="copyScript(this)">복사</button>
+      <pre id="scriptCode"></pre>
+    </div>
+
+    <div class="step-guide" data-n="3"><code>배포</code> → <code>새 배포</code> → 유형: <code>웹 앱</code> → 액세스: <code>모든 사용자</code> → 배포</div>
+    <div class="step-guide" data-n="4">생성된 URL을 아래에 붙여넣기</div>
+
+    <div class="url-row">
+      <input type="text" id="endpointInput" placeholder="https://script.google.com/macros/s/.../exec">
+      <button onclick="saveEndpoint()">연결</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 1: Contract Selection ===== -->
+  <div class="card" id="step1Card">
+    <h3>계약서 선택</h3>
+    <p class="card-hint">생성할 표준 계약서를 선택하세요</p>
+    <input type="text" class="contract-search" id="contractSearch" placeholder="코드 또는 이름으로 검색..." oninput="filterContracts()">
+    <div class="contract-list" id="contractList">
+      <div class="cl-empty">연동 후 계약서 목록이 표시됩니다</div>
+    </div>
+    <button class="btn-primary" id="btnStep1" style="margin-top:16px" onclick="goStep2()" disabled>다음: 법인정보 입력</button>
+  </div>
+
+  <!-- ===== STEP 2: Company Info Form ===== -->
+  <div class="card hidden" id="step2Card">
+    <div class="selected-contract" id="selectedDisplay"></div>
+
+    <div class="form-section">
+      <div class="form-section-label">계약 기본정보</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>계약 체결일<span class="req">*</span></label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="form-group">
+          <label>계약 시작일</label>
+          <input type="date" id="fStartDate">
+        </div>
+      </div>
+
+      <hr class="form-divider">
+      <div class="form-section-label">계약 상대방 ("을") 정보</div>
+
+      <div class="form-group">
+        <label>법인명 / 상호<span class="req">*</span></label>
+        <input type="text" id="fCompany" placeholder="예: 주식회사 고위드프렌즈">
+      </div>
+      <div class="form-group">
+        <label>대표자명<span class="req">*</span></label>
+        <input type="text" id="fCeo" placeholder="예: 홍길동">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>사업자등록번호<span class="req">*</span></label>
+          <input type="text" id="fBizNo" placeholder="000-00-00000" oninput="formatBizNo(this)">
+        </div>
+        <div class="form-group">
+          <label>법인등록번호</label>
+          <input type="text" id="fCorpNo" placeholder="000000-0000000" oninput="formatCorpNo(this)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>주소<span class="req">*</span></label>
+        <input type="text" id="fAddress" placeholder="예: 서울특별시 강남구 테헤란로 123, 4층">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>업태</label>
+          <input type="text" id="fBizType" placeholder="예: 서비스업">
+        </div>
+        <div class="form-group">
+          <label>종목</label>
+          <input type="text" id="fBizItem" placeholder="예: 소프트웨어 개발">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>담당자명</label>
+          <input type="text" id="fContact" placeholder="실무 담당자">
+        </div>
+        <div class="form-group">
+          <label>담당자 연락처</label>
+          <input type="text" id="fPhone" placeholder="010-0000-0000">
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goStep1()">이전</button>
+      <button class="btn-primary" style="flex:2" id="btnStep2" onclick="goStep3()">다음: 확인 & 생성</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: Preview & Generate ===== -->
+  <div class="card hidden" id="step3Card">
+    <h3>입력 정보 확인</h3>
+    <p class="card-hint">아래 내용으로 계약서를 생성합니다. 확인 후 생성 버튼을 누르세요.</p>
+
+    <div class="preview-info" id="previewInfo"></div>
+
+    <button class="btn-primary" id="btnGenerate" onclick="generate()">계약서 생성</button>
+
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn-secondary" style="flex:1" onclick="goStep2Back()">수정하기</button>
+    </div>
+  </div>
+
+  <!-- ===== Result ===== -->
+  <div class="hidden" id="resultArea"></div>
+
+  <div id="errorArea"></div>
+
+  <div class="disclaimer">표준 계약서 양식 기반 자동 생성 &middot; 최종 검토는 법무팀 확인을 거쳐 주세요</div>
+  <div class="footer">
+    Go_track Generator &middot; <a href="gotrack-lookup.html">Lookup</a> &middot; <a href="gotrack-v1.0.html">변경 이력</a> &middot; <a href="gommon-sense-v4.0.html">Gommon Sense</a>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p id="loadingMsg">계약서를 생성하고 있습니다...</p>
+  <div class="loading-sub" id="loadingSub">템플릿 복사 → 법인정보 입력 → PDF 변환</div>
+</div>
+
+<script>
+// ========== Apps Script ==========
+const APPS_SCRIPT = `function doGet(e) {
+  var action = (e && e.parameter && e.parameter.action) || "list";
+
+  if (action === "list") return listContracts();
+  if (action === "generate") return generateContract(e.parameter);
+
+  return jsonResponse({error: "알 수 없는 action"});
+}
+
+function listContracts() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Link") || ss.getSheetByName("link") || ss.getSheets()[0];
+
+  var data = sheet.getDataRange();
+  var values = data.getValues();
+  var richTexts = data.getRichTextValues();
+  var result = [];
+
+  for (var r = 0; r < values.length; r++) {
+    var baseCode = String(values[r][1]).trim();
+    var title = String(values[r][2]).trim();
+    var displayText = String(values[r][5]).trim();
+
+    if (!baseCode || baseCode === "Code" || !displayText || displayText === "Link") continue;
+    if (["ENGINE","FUEL","vws","\\uad6c\\ub3c5","vws+FUEL","\\ucc38\\uace0"].includes(baseCode)) continue;
+
+    var url = "";
+    var linkCell = richTexts[r][5];
+    if (linkCell) {
+      var runs = linkCell.getRuns();
+      for (var i = 0; i < runs.length; i++) {
+        var u = runs[i].getLinkUrl();
+        if (u) { url = u; break; }
+      }
+    }
+
+    result.push({ base: baseCode, title: title, current: displayText, url: url });
+  }
+
+  return jsonResponse(result);
+}
+
+function generateContract(params) {
+  try {
+    var templateUrl = params.templateUrl;
+    if (!templateUrl) return jsonResponse({error: "템플릿 URL이 없습니다"});
+
+    // Google Docs ID 추출
+    var docId = extractDocId(templateUrl);
+    if (!docId) return jsonResponse({error: "유효한 Google Docs URL이 아닙니다"});
+
+    // 템플릿 복사
+    var templateFile = DriveApp.getFileById(docId);
+    var companyName = params.company || "표준";
+    var contractCode = params.contractCode || "";
+    var newName = templateFile.getName().replace(/\\\\*|\\\\[.*?\\\\]|_?표준/g, "").trim() + "_" + companyName;
+    var copy = templateFile.makeCopy(newName);
+    var newDoc = DocumentApp.openById(copy.getId());
+    var body = newDoc.getBody();
+
+    // 치환 맵
+    var replacements = {
+      "표준": companyName,
+      "{{회사명}}": companyName,
+      "{{법인명}}": companyName,
+      "{{상호}}": companyName,
+      "{{대표자}}": params.ceo || "",
+      "{{대표자명}}": params.ceo || "",
+      "{{사업자등록번호}}": params.bizNo || "",
+      "{{법인등록번호}}": params.corpNo || "",
+      "{{주소}}": params.address || "",
+      "{{업태}}": params.bizType || "",
+      "{{종목}}": params.bizItem || "",
+      "{{담당자}}": params.contact || "",
+      "{{연락처}}": params.phone || "",
+      "{{계약일}}": params.contractDate || "",
+      "{{계약체결일}}": params.contractDate || "",
+      "{{시작일}}": params.startDate || "",
+      "{{계약시작일}}": params.startDate || "",
+    };
+
+    // 본문 치환
+    for (var key in replacements) {
+      if (replacements[key]) {
+        body.replaceText(escapeRegex(key), replacements[key]);
+      }
+    }
+
+    // 헤더/푸터 치환
+    var headers = newDoc.getHeader();
+    var footers = newDoc.getFooter();
+    if (headers) {
+      for (var key in replacements) {
+        if (replacements[key]) headers.replaceText(escapeRegex(key), replacements[key]);
+      }
+    }
+    if (footers) {
+      for (var key in replacements) {
+        if (replacements[key]) footers.replaceText(escapeRegex(key), replacements[key]);
+      }
+    }
+
+    newDoc.saveAndClose();
+
+    // PDF 변환
+    var pdfBlob = copy.getAs("application/pdf");
+    pdfBlob.setName(newName + ".pdf");
+
+    // PDF를 같은 폴더에 저장
+    var parents = templateFile.getParents();
+    var folder = parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
+    var pdfFile = folder.createFile(pdfBlob);
+
+    // 생성된 문서의 권한 설정 (링크가 있는 사용자 보기 가능)
+    try {
+      pdfFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      copy.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch(e) {}
+
+    return jsonResponse({
+      success: true,
+      docUrl: "https://docs.google.com/document/d/" + copy.getId() + "/edit",
+      pdfUrl: "https://drive.google.com/file/d/" + pdfFile.getId() + "/view",
+      pdfDownload: "https://drive.google.com/uc?export=download&id=" + pdfFile.getId(),
+      fileName: newName
+    });
+
+  } catch(e) {
+    return jsonResponse({error: e.message});
+  }
+}
+
+function extractDocId(url) {
+  var m = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
+}
+
+function jsonResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+// ========== State ==========
+let CONTRACTS = [];
+let selectedContract = null;
+let currentStep = 1;
+
+// ========== Init ==========
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('scriptCode').textContent = APPS_SCRIPT;
+  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+
+  const endpoint = localStorage.getItem('gotrack_gen_endpoint');
+  if (endpoint) {
+    fetchContracts(endpoint);
+  } else {
+    setConn('err', '연동이 설정되지 않았습니다');
+    showSetup();
+  }
+});
+
+// ========== Connection ==========
+function setConn(state, msg) {
+  const bar = document.getElementById('connBar');
+  bar.className = 'conn-bar ' + state;
+  document.getElementById('connMsg').textContent = msg;
+}
+
+function showSetup() {
+  document.getElementById('setupCard').classList.remove('hidden');
+  const existing = localStorage.getItem('gotrack_gen_endpoint');
+  if (existing) document.getElementById('endpointInput').value = existing;
+}
+
+function saveEndpoint() {
+  const url = document.getElementById('endpointInput').value.trim();
+  if (!url) return;
+  localStorage.setItem('gotrack_gen_endpoint', url);
+  fetchContracts(url);
+}
+
+async function fetchContracts(endpoint) {
+  setConn('loading', '스프레드시트 연결 중...');
+  try {
+    const res = await fetch(endpoint + '?action=list');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    CONTRACTS = data.filter(d => d.url); // URL이 있는 것만
+    setConn('ok', CONTRACTS.length + '개 계약서 템플릿 연동됨');
+    document.getElementById('connAction').textContent = '재설정';
+    document.getElementById('setupCard').classList.add('hidden');
+    renderContractList();
+  } catch (e) {
+    setConn('err', '연결 실패: ' + e.message);
+    showSetup();
+  }
+}
+
+// ========== Step navigation ==========
+function setStep(n) {
+  currentStep = n;
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('sd' + i);
+    const lbl = document.getElementById('slbl' + i);
+    dot.classList.remove('active', 'done');
+    lbl.classList.remove('active');
+    if (i < n) dot.classList.add('done');
+    if (i === n) { dot.classList.add('active'); lbl.classList.add('active'); }
+  }
+  document.getElementById('sl1').classList.toggle('done', n > 1);
+  document.getElementById('sl2').classList.toggle('done', n > 2);
+
+  document.getElementById('step1Card').classList.toggle('hidden', n !== 1);
+  document.getElementById('step2Card').classList.toggle('hidden', n !== 2);
+  document.getElementById('step3Card').classList.toggle('hidden', n !== 3);
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('errorArea').innerHTML = '';
+}
+
+function goStep1() { setStep(1); }
+
+function goStep2() {
+  if (!selectedContract) return;
+  document.getElementById('selectedDisplay').innerHTML =
+    `<span class="sc-code">${esc(selectedContract.current)}</span>
+     <span class="sc-name">${esc(selectedContract.title)}</span>
+     <span class="sc-change" onclick="goStep1()">변경</span>`;
+  setStep(2);
+  document.getElementById('fCompany').focus();
+}
+
+function goStep2Back() { setStep(2); }
+
+function goStep3() {
+  // Validation
+  const company = document.getElementById('fCompany').value.trim();
+  const ceo = document.getElementById('fCeo').value.trim();
+  const bizNo = document.getElementById('fBizNo').value.trim();
+  const address = document.getElementById('fAddress').value.trim();
+  const date = document.getElementById('fDate').value;
+
+  if (!company) return showError('법인명/상호를 입력해 주세요');
+  if (!ceo) return showError('대표자명을 입력해 주세요');
+  if (!bizNo) return showError('사업자등록번호를 입력해 주세요');
+  if (!address) return showError('주소를 입력해 주세요');
+  if (!date) return showError('계약 체결일을 입력해 주세요');
+
+  // Build preview
+  const fields = [
+    ['계약서', `${selectedContract.current} — ${selectedContract.title}`],
+    ['계약 체결일', formatDateKR(date)],
+    ['계약 시작일', document.getElementById('fStartDate').value ? formatDateKR(document.getElementById('fStartDate').value) : '—'],
+    ['법인명/상호', company],
+    ['대표자명', ceo],
+    ['사업자등록번호', bizNo],
+    ['법인등록번호', document.getElementById('fCorpNo').value.trim() || '—'],
+    ['주소', address],
+    ['업태/종목', [document.getElementById('fBizType').value.trim(), document.getElementById('fBizItem').value.trim()].filter(Boolean).join(' / ') || '—'],
+    ['담당자', [document.getElementById('fContact').value.trim(), document.getElementById('fPhone').value.trim()].filter(Boolean).join(' · ') || '—'],
+  ];
+
+  document.getElementById('previewInfo').innerHTML = fields.map(([l, v]) =>
+    `<div class="preview-row"><span class="pr-label">${esc(l)}</span><span class="pr-value">${esc(v)}</span></div>`
+  ).join('');
+
+  setStep(3);
+}
+
+// ========== Generate ==========
+async function generate() {
+  const endpoint = localStorage.getItem('gotrack_gen_endpoint');
+  if (!endpoint) return showError('연동이 설정되지 않았습니다');
+
+  const params = new URLSearchParams({
+    action: 'generate',
+    templateUrl: selectedContract.url,
+    contractCode: selectedContract.current,
+    company: document.getElementById('fCompany').value.trim(),
+    ceo: document.getElementById('fCeo').value.trim(),
+    bizNo: document.getElementById('fBizNo').value.trim(),
+    corpNo: document.getElementById('fCorpNo').value.trim(),
+    address: document.getElementById('fAddress').value.trim(),
+    bizType: document.getElementById('fBizType').value.trim(),
+    bizItem: document.getElementById('fBizItem').value.trim(),
+    contact: document.getElementById('fContact').value.trim(),
+    phone: document.getElementById('fPhone').value.trim(),
+    contractDate: formatDateKR(document.getElementById('fDate').value),
+    startDate: document.getElementById('fStartDate').value ? formatDateKR(document.getElementById('fStartDate').value) : '',
+  });
+
+  showLoading(true);
+
+  try {
+    const res = await fetch(endpoint + '?' + params.toString());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    showLoading(false);
+    showResult(data);
+  } catch (e) {
+    showLoading(false);
+    showError('생성 실패: ' + e.message);
+  }
+}
+
+function showResult(data) {
+  const area = document.getElementById('resultArea');
+  area.classList.remove('hidden');
+  document.getElementById('step3Card').classList.add('hidden');
+
+  // Update step dots
+  document.getElementById('sd3').classList.remove('active');
+  document.getElementById('sd3').classList.add('done');
+
+  area.innerHTML = `
+    <div class="result-card">
+      <div class="rc-icon">&#x2705;</div>
+      <h3>${esc(data.fileName || '계약서 생성 완료')}</h3>
+      <p>계약서가 생성되었습니다. PDF를 다운로드하거나 Google Docs에서 추가 편집할 수 있습니다.</p>
+      <div class="btn-row" style="justify-content:center">
+        <a class="btn-download" href="${esc(data.pdfDownload)}" target="_blank">PDF 다운로드</a>
+      </div>
+      <div class="btn-row" style="justify-content:center;margin-top:8px">
+        <a class="btn-secondary" href="${esc(data.pdfUrl)}" target="_blank" style="text-align:center;text-decoration:none;color:var(--t60)">PDF 미리보기</a>
+        <a class="btn-secondary" href="${esc(data.docUrl)}" target="_blank" style="text-align:center;text-decoration:none;color:var(--t60)">Google Docs에서 편집</a>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <span style="color:var(--accent);cursor:pointer;font-size:14px;text-decoration:underline" onclick="resetAll()">새 계약서 만들기</span>
+    </div>`;
+}
+
+// ========== Contract list ==========
+function renderContractList() {
+  const list = document.getElementById('contractList');
+  if (CONTRACTS.length === 0) {
+    list.innerHTML = '<div class="cl-empty">링크가 연결된 계약서가 없습니다</div>';
+    return;
+  }
+
+  list.innerHTML = CONTRACTS.map((c, i) => {
+    const revised = c.base !== c.current;
+    return `<div class="cl-item" data-idx="${i}" data-search="${[c.base,c.current,c.title].join(' ').toLowerCase()}" onclick="selectContractItem(${i})">
+      <span class="cli-code">${esc(c.current)}</span>
+      <span class="cli-name">${esc(c.title)}</span>
+      ${revised ? '<span class="cli-badge">현행</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterContracts() {
+  const q = document.getElementById('contractSearch').value.trim().toLowerCase();
+  document.querySelectorAll('.cl-item').forEach(el => {
+    const match = !q || el.dataset.search.includes(q);
+    el.classList.toggle('cli-hidden', !match);
+  });
+}
+
+function selectContractItem(idx) {
+  selectedContract = CONTRACTS[idx];
+  document.querySelectorAll('.cl-item').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.cl-item[data-idx="${idx}"]`).classList.add('selected');
+  document.getElementById('btnStep1').disabled = false;
+}
+
+// ========== Utilities ==========
+function esc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function formatDateKR(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+}
+
+function formatBizNo(input) {
+  let v = input.value.replace(/[^0-9]/g, '');
+  if (v.length > 3 && v.length <= 5) v = v.slice(0,3) + '-' + v.slice(3);
+  else if (v.length > 5) v = v.slice(0,3) + '-' + v.slice(3,5) + '-' + v.slice(5,10);
+  input.value = v;
+}
+
+function formatCorpNo(input) {
+  let v = input.value.replace(/[^0-9]/g, '');
+  if (v.length > 6) v = v.slice(0,6) + '-' + v.slice(6,13);
+  input.value = v;
+}
+
+function showError(msg) {
+  document.getElementById('errorArea').innerHTML = `<div class="error-box">${esc(msg)}</div>`;
+  setTimeout(() => { document.getElementById('errorArea').innerHTML = ''; }, 5000);
+}
+
+function showLoading(show) {
+  document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+}
+
+function copyScript(btn) {
+  navigator.clipboard.writeText(APPS_SCRIPT).then(() => {
+    btn.textContent = '복사됨!';
+    setTimeout(() => { btn.textContent = '복사'; }, 1500);
+  });
+}
+
+function resetAll() {
+  selectedContract = null;
+  document.querySelectorAll('.cl-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('btnStep1').disabled = true;
+  document.getElementById('contractSearch').value = '';
+  document.getElementById('fCompany').value = '';
+  document.getElementById('fCeo').value = '';
+  document.getElementById('fBizNo').value = '';
+  document.getElementById('fCorpNo').value = '';
+  document.getElementById('fAddress').value = '';
+  document.getElementById('fBizType').value = '';
+  document.getElementById('fBizItem').value = '';
+  document.getElementById('fContact').value = '';
+  document.getElementById('fPhone').value = '';
+  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fStartDate').value = '';
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('errorArea').innerHTML = '';
+  filterContracts();
+  setStep(1);
+}
+</script>
+<script src="auth-gate.js"></script>
+</body>
+</html>

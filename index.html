@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go Legal Portal — 고위드 법무 도구 모음</title>
+<style>
+  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#1e1e30;--purple:#7c8cf0;--green:#6ec8a0;--red:#ff6b6b;--yellow:#ffd43b;--blue:#74c0fc;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:16px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
+
+  /* Hero */
+  .hero{text-align:center;padding:60px 20px 40px}
+  .hero .logo{font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+  .hero .logo .go{color:var(--green)}
+  .hero .logo .legal{color:var(--t50)}
+  .hero .logo .portal{color:var(--t30);font-weight:400;font-size:28px;margin-left:4px}
+  .hero .tagline{font-size:16px;color:var(--t60);margin-bottom:8px}
+  .hero .sub{font-size:13px;color:var(--t30);max-width:520px;margin:0 auto;line-height:1.8}
+
+  /* Grid */
+  .wrap{max-width:840px;margin:0 auto;padding:0 20px 40px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+
+  /* Tool Card */
+  .tool-card{background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:28px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;text-decoration:none;display:block}
+  .tool-card:hover{border-color:var(--t30);background:var(--card-hover);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+  .tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+  .tool-card.purple::before{background:linear-gradient(90deg,var(--purple),rgba(124,140,240,.3))}
+  .tool-card.green::before{background:linear-gradient(90deg,var(--green),rgba(110,200,160,.3))}
+  .tool-card.blue::before{background:linear-gradient(90deg,var(--blue),rgba(116,192,252,.3))}
+  .tool-card.yellow::before{background:linear-gradient(90deg,var(--yellow),rgba(255,212,59,.3))}
+
+  .tc-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .tc-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .purple .tc-icon{background:rgba(124,140,240,.15);color:var(--purple)}
+  .green .tc-icon{background:rgba(110,200,160,.15);color:var(--green)}
+  .blue .tc-icon{background:rgba(116,192,252,.15);color:var(--blue)}
+  .yellow .tc-icon{background:rgba(255,212,59,.12);color:var(--yellow)}
+  .tc-title{font-size:17px;font-weight:700;color:var(--t50);line-height:1.3}
+  .tc-title .tc-ver{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
+  .purple .tc-ver{background:rgba(124,140,240,.15);color:var(--purple)}
+  .green .tc-ver{background:rgba(110,200,160,.15);color:var(--green)}
+  .blue .tc-ver{background:rgba(116,192,252,.15);color:var(--blue)}
+  .yellow .tc-ver{background:rgba(255,212,59,.12);color:var(--yellow)}
+
+  .tc-desc{font-size:13px;color:var(--t60);line-height:1.7;margin-bottom:16px;min-height:62px}
+
+  .tc-features{display:flex;flex-wrap:wrap;gap:6px}
+  .tc-feat{font-size:10px;padding:3px 10px;border-radius:12px;font-weight:500;border:1px solid var(--t08);color:var(--t30);background:var(--t08)}
+  .purple .tc-feat{border-color:rgba(124,140,240,.15);color:rgba(124,140,240,.7)}
+  .green .tc-feat{border-color:rgba(110,200,160,.15);color:rgba(110,200,160,.7)}
+  .blue .tc-feat{border-color:rgba(116,192,252,.15);color:rgba(116,192,252,.7)}
+  .yellow .tc-feat{border-color:rgba(255,212,59,.15);color:rgba(255,212,59,.7)}
+
+  .tc-arrow{position:absolute;bottom:20px;right:20px;font-size:18px;color:var(--t15);transition:all .25s}
+  .tool-card:hover .tc-arrow{color:var(--t60);transform:translateX(4px)}
+
+  /* Status bar */
+  .status-row{margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .status-pill{font-size:11px;padding:6px 14px;border-radius:20px;background:var(--t08);border:1px solid var(--t15);color:var(--t30);display:flex;align-items:center;gap:6px}
+  .status-pill .s-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+  /* Footer */
+  .footer{text-align:center;padding:24px 20px;font-size:11px;color:var(--t30);border-top:1px solid var(--t08);margin-top:32px;line-height:1.8}
+
+  @media(max-width:640px){
+    .hero{padding:40px 16px 24px}
+    .hero .logo{font-size:28px}
+    .hero .logo .portal{font-size:22px}
+    .grid{grid-template-columns:1fr;gap:12px}
+    .wrap{padding:0 12px 24px}
+    .tc-desc{min-height:auto}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo">
+    <span class="go">Go</span><span class="legal"> Legal</span><span class="portal"> Portal</span>
+  </div>
+  <p class="tagline">고위드 법무 도구 모음</p>
+  <p class="sub">법무 리스크 체크부터 계약서 변경 이력 확인, 현행 계약서 조회, 자동 생성까지.<br>비법무 실무자도 쉽게 사용할 수 있는 법무 셀프서비스 플랫폼.</p>
+</div>
+
+<div class="wrap">
+  <div class="grid">
+
+    <!-- Gommon Sense -->
+    <a class="tool-card purple" href="gommon-sense-v4.0.html">
+      <div class="tc-header">
+        <div class="tc-icon">&#x26A1;</div>
+        <div class="tc-title">Gommon Sense<span class="tc-ver">v4.0</span></div>
+      </div>
+      <div class="tc-desc">
+        업무 상황을 설명하면 AI가 5대 Grey Zone 축으로 법적 리스크를 자동 분석합니다. Slack으로 법무팀에 바로 검토 요청까지.
+      </div>
+      <div class="tc-features">
+        <span class="tc-feat">AI 리스크 분석</span>
+        <span class="tc-feat">5대 축 스캔</span>
+        <span class="tc-feat">Slack 연동</span>
+      </div>
+      <div class="tc-arrow">&#x2192;</div>
+    </a>
+
+    <!-- Go_track -->
+    <a class="tool-card green" href="gotrack-v1.0.html">
+      <div class="tc-header">
+        <div class="tc-icon">&#x1F4CB;</div>
+        <div class="tc-title">Go_track<span class="tc-ver">v1.0</span></div>
+      </div>
+      <div class="tc-desc">
+        계약서가 왜, 어떻게 바뀌었는지 AI가 설명합니다. 개정 전/후 대조, 취지, 현업 체크포인트를 한눈에 확인.
+      </div>
+      <div class="tc-features">
+        <span class="tc-feat">변경 이력 분석</span>
+        <span class="tc-feat">개정 취지</span>
+        <span class="tc-feat">버전 트리</span>
+      </div>
+      <div class="tc-arrow">&#x2192;</div>
+    </a>
+
+    <!-- Go_track Lookup -->
+    <a class="tool-card blue" href="gotrack-lookup.html">
+      <div class="tc-header">
+        <div class="tc-icon">&#x1F50D;</div>
+        <div class="tc-title">Go_track Lookup<span class="tc-ver">v1.0</span></div>
+      </div>
+      <div class="tc-desc">
+        현행 계약서 코드를 빠르게 조회하고, Google Docs 원문을 바로 열 수 있습니다. 스프레드시트와 실시간 연동.
+      </div>
+      <div class="tc-features">
+        <span class="tc-feat">현행 버전 조회</span>
+        <span class="tc-feat">Google Docs 연결</span>
+        <span class="tc-feat">실시간 동기화</span>
+      </div>
+      <div class="tc-arrow">&#x2192;</div>
+    </a>
+
+    <!-- Go_track Generator -->
+    <a class="tool-card yellow" href="gotrack-generator.html">
+      <div class="tc-header">
+        <div class="tc-icon">&#x1F4C4;</div>
+        <div class="tc-title">Go_track Generator<span class="tc-ver">v1.0</span></div>
+      </div>
+      <div class="tc-desc">
+        법인정보만 입력하면 표준 계약서 양식에 자동으로 채워서 PDF를 생성합니다. 휴먼에러를 줄이는 계약서 공장.
+      </div>
+      <div class="tc-features">
+        <span class="tc-feat">법인정보 자동 입력</span>
+        <span class="tc-feat">PDF 추출</span>
+        <span class="tc-feat">표준양식 유지</span>
+      </div>
+      <div class="tc-arrow">&#x2192;</div>
+    </a>
+
+  </div>
+
+  <div class="status-row">
+    <div class="status-pill"><span class="s-dot"></span>Gemini 2.5 Flash</div>
+    <div class="status-pill"><span class="s-dot"></span>Google Sheets 연동</div>
+    <div class="status-pill"><span class="s-dot"></span>Google Docs 연동</div>
+  </div>
+</div>
+
+<div class="footer">
+  Go Legal Portal &middot; Gowid Legal Tech &middot; 2026<br>
+  AI 기반 1차 분석 도구 &middot; 최종 판단은 법무팀 검토를 거쳐 주세요
+</div>
+
+<script src="auth-gate.js"></script>
+</body>
+</html>
