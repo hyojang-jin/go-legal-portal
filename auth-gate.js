@@ -8,9 +8,6 @@
 
   if (sessionStorage.getItem(KEY) === 'ok') return;
 
-  // 기존 body 숨기기
-  document.documentElement.style.visibility = 'hidden';
-
   async function sha256(text) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -21,6 +18,7 @@
     overlay.id = 'auth-overlay';
     overlay.innerHTML = `
       <style>
+        html.auth-locked > body > *:not(#auth-overlay){display:none!important}
         #auth-overlay{position:fixed;inset:0;z-index:99999;background:#0f0f14;display:flex;align-items:center;justify-content:center;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
         #auth-box{text-align:center;padding:40px;max-width:360px;width:100%}
         #auth-box .logo{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:6px;color:rgba(255,255,255,.92)}
@@ -40,6 +38,7 @@
         <button id="auth-btn">확인</button>
         <div class="err" id="auth-err"></div>
       </div>`;
+    document.documentElement.classList.add('auth-locked');
     document.body.appendChild(overlay);
 
     const pwInput = document.getElementById('auth-pw');
@@ -52,8 +51,8 @@
       const h = await sha256(val);
       if (h === HASH) {
         sessionStorage.setItem(KEY, 'ok');
+        document.documentElement.classList.remove('auth-locked');
         overlay.remove();
-        document.documentElement.style.visibility = '';
       } else {
         err.textContent = '비밀번호가 틀렸습니다';
         pwInput.value = '';
