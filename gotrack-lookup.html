@@ -83,10 +83,22 @@
   .footer{margin-top:24px;text-align:center;font-size:11px;color:var(--t30);line-height:1.6}
   .footer a{color:var(--accent);text-decoration:none}
 
+  /* Top Nav */
+  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(15,15,20,.95);border-bottom:1px solid var(--t08);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+  .top-nav .nav-home{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t60);text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent}
+  .top-nav .nav-home:hover{color:var(--t50);background:var(--t08);border-color:var(--t15)}
+  .top-nav .nav-title{font-size:13px;color:var(--t80);font-weight:600;cursor:pointer;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent;user-select:none}
+  .top-nav .nav-title:hover{color:var(--accent);background:var(--accent-dim);border-color:rgba(110,200,160,.2)}
+  .top-nav .nav-title .nav-ver{font-size:10px;color:var(--accent);font-weight:600;margin-left:4px}
+
   @media(max-width:600px){.wrap{padding:12px}.row{flex-wrap:wrap;gap:6px}.row .r-name{min-width:100%;order:10;margin-top:2px}.url-row{flex-direction:column}}
 </style>
 </head>
 <body>
+<nav class="top-nav">
+  <a class="nav-home" href="index.html">&#x2190; Go Legal Portal</a>
+  <span class="nav-title" onclick="location.reload()">Go_track<span class="nav-ver">Lookup</span></span>
+</nav>
 <header>
   <h1><span>Go</span>_track <span class="ver">Lookup</span></h1>
   <p>현행 계약서 빠른 조회 &middot; Google Docs 바로 열기</p>
