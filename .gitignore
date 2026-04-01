@@ -6,3 +6,7 @@ grey-sense-v1.0.html
 *.xlsx
 *.txt
 _tmp_xlsx/
+gowid_filtered.json
+lbox-extractor.js
+superlawyer-extractor-api.js
+superlawyer-extractor.js

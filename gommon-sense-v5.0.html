@@ -1016,14 +1016,14 @@ function handlePrecedentUpload(event) {
 }
 
 // ========== API ==========
-const DEFAULT_KEY = 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak';
+const DEFAULT_KEY = '';
 const DEFAULT_SLACK_TOKEN = 'xoxb-523970022560-10596436186850-EHekobiznpnPYAfU84wCUfgs';
 const DEFAULT_SLACK_USER = 'U080B5UD7RA';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 async function callAI(userText, systemPrompt, precedentContext = '') {
   const key = localStorage.getItem('gowid_gemini_key') || DEFAULT_KEY;
-  if (!key) throw new Error('API 키가 설정되지 않았습니다.');
+  if (!key) throw new Error('API 키가 설정되지 않았습니다. Admin → 설정에서 Gemini API Key를 입력해 주세요.');
 
   const fullSystemPrompt = systemPrompt + precedentContext;
 

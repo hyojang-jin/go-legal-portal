@@ -460,12 +460,12 @@ function refreshDashboard() {
 
   // Health checks
   const checks = [
-    { name: 'Gemini API Key (공용)', key: 'gowid_gemini_key', fallback: 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak' },
+    { name: 'Gemini API Key (공용)', key: 'gowid_gemini_key', fallback: '' },
     { name: 'Slack Bot Token', key: 'gowid_slack_bot_token', fallback: 'xoxb-523970022560-10596436186850-EHekobiznpnPYAfU84wCUfgs' },
     { name: 'Slack User ID', key: 'gowid_slack_user_id', fallback: 'U080B5UD7RA' },
     { name: 'GoTrack 조회 Endpoint', key: 'gotrack_endpoint', fallback: 'https://script.google.com/macros/s/AKfycbyB_MlbkzrA7GR-SQw6QE_7OYzn_NENYtTlAj3-KAHknCDtDn3ojUcPNuxvqCp9fbDyIQ/exec' },
     { name: 'GoTrack 생성 Endpoint', key: 'gotrack_gen_endpoint', fallback: 'https://script.google.com/macros/s/AKfycbyB_MlbkzrA7GR-SQw6QE_7OYzn_NENYtTlAj3-KAHknCDtDn3ojUcPNuxvqCp9fbDyIQ/exec' },
-    { name: 'GoTrack Gemini Key', key: 'gotrack_gemini_key', fallback: localStorage.getItem('gowid_gemini_key') || 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak' },
+    { name: 'GoTrack Gemini Key', key: 'gotrack_gemini_key', fallback: localStorage.getItem('gowid_gemini_key') || '' },
   ];
 
   const $health = document.getElementById('healthList');
@@ -562,7 +562,7 @@ window.clearGoDrop = async function(btn) {
 /* ═══════════════════════════════════════
    GoDrop Archive + AI Classification
    ═══════════════════════════════════════ */
-const DEFAULT_KEY = 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak';
+const DEFAULT_KEY = '';
 const GEMINI_MODEL = 'gemini-2.5-flash';
 let gdArchive = [];
 let activeFilter = '';
