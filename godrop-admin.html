@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoDrop Archive — 관리자</title>
+<style>
+  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#22223a;--accent:#e8a04c;--accent-dim:rgba(232,160,76,.15);--red:#ff6b6b;--green:#69db7c;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
+  .wrap{max-width:860px;margin:0 auto;padding:20px}
+
+  /* Top Nav */
+  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(15,15,20,.95);border-bottom:1px solid var(--t08);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+  .top-nav .nav-home{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t60);text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent}
+  .top-nav .nav-home:hover{color:var(--t50);background:var(--t08);border-color:var(--t15)}
+  .top-nav .nav-title{font-size:13px;color:var(--t80);font-weight:600;padding:6px 12px}
+  .top-nav .nav-title .nav-ver{font-size:10px;color:var(--accent);font-weight:600;margin-left:4px}
+
+  /* Header */
+  header{padding:32px 0 24px;text-align:center;border-bottom:1px solid var(--t15)}
+  header h1{font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--t50)}
+  header h1 span{color:var(--accent)}
+  header .ver{font-size:12px;color:var(--accent);font-weight:600;margin-left:6px;vertical-align:super}
+  header p{font-size:14px;color:var(--t60);margin-top:6px}
+  .admin-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 12px;border-radius:16px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);color:var(--red);font-weight:600;margin-bottom:12px}
+  .admin-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 6px rgba(255,107,107,.5)}
+
+  /* Stats */
+  .stats-row{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+  .stat-card{flex:1;min-width:120px;background:var(--card);border:1px solid var(--t15);border-radius:10px;padding:16px;text-align:center}
+  .stat-num{font-size:28px;font-weight:800;color:var(--accent)}
+  .stat-label{font-size:11px;color:var(--t30);font-weight:500;margin-top:2px}
+
+  /* Toolbar */
+  .toolbar{display:flex;align-items:center;gap:10px;margin-top:24px;flex-wrap:wrap}
+  .toolbar .search-box{flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--t15);border-radius:8px;font-size:13px;font-family:inherit;background:var(--t08);color:var(--t50);transition:border-color .2s}
+  .toolbar .search-box:focus{outline:none;border-color:var(--accent)}
+  .toolbar .search-box::placeholder{color:var(--t30)}
+  .toolbar select{padding:9px 30px 9px 12px;border:1px solid var(--t15);border-radius:8px;font-size:12px;font-family:inherit;background:var(--t08);color:var(--t50);-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
+  .toolbar select:focus{outline:none;border-color:var(--accent)}
+  .toolbar select option{background:var(--card);color:var(--t50)}
+  .btn-export{padding:9px 16px;border:1px solid rgba(232,160,76,.2);border-radius:8px;font-size:12px;font-family:inherit;background:transparent;color:var(--accent);cursor:pointer;font-weight:600;transition:all .15s}
+  .btn-export:hover{background:var(--accent-dim)}
+  .btn-clear-all{padding:9px 16px;border:1px solid rgba(255,107,107,.2);border-radius:8px;font-size:12px;font-family:inherit;background:transparent;color:var(--red);cursor:pointer;font-weight:600;transition:all .15s}
+  .btn-clear-all:hover{background:rgba(255,107,107,.08)}
+
+  /* Archive List */
+  .archive-list{margin-top:16px;display:flex;flex-direction:column;gap:6px}
+  .archive-empty{text-align:center;padding:48px;color:var(--t30);font-size:13px}
+  .archive-empty .ae-icon{font-size:40px;margin-bottom:10px;opacity:.4}
+  .archive-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--t08);border-radius:10px;transition:all .2s}
+  .archive-item:hover{border-color:var(--t15);background:var(--card-hover)}
+  .ai-icon{font-size:22px;flex-shrink:0}
+  .ai-body{flex:1;min-width:0}
+  .ai-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap}
+  .ai-title{font-size:13px;font-weight:700;color:var(--t80);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+  .ai-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;flex-shrink:0}
+  .ai-badge.type{background:var(--accent-dim);color:var(--accent)}
+  .ai-badge.sign{background:var(--t08);color:var(--t60)}
+  .ai-badge.dept{background:rgba(110,200,160,.1);color:#6ec8a0}
+  .ai-mid{font-size:12px;color:var(--t60);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ai-bottom{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ai-files{font-size:11px;color:var(--t30)}
+  .ai-id{font-size:10px;color:var(--t30);font-family:'SF Mono',Consolas,monospace;opacity:.7}
+  .ai-time{font-size:11px;color:var(--t30);margin-left:auto;flex-shrink:0}
+  .ai-del{font-size:14px;color:var(--t15);cursor:pointer;padding:6px;border-radius:6px;transition:all .15s;flex-shrink:0;border:none;background:none;font-family:inherit}
+  .ai-del:hover{color:var(--red);background:rgba(255,107,107,.08)}
+
+  /* Footer */
+  .footer{text-align:center;padding:24px 20px;font-size:11px;color:var(--t30);border-top:1px solid var(--t08);margin-top:32px;line-height:1.8}
+
+  @media(max-width:640px){
+    .wrap{padding:12px}
+    header{padding:20px 0 16px}
+    header h1{font-size:20px}
+    .stats-row{gap:8px}
+    .stat-card{padding:12px}
+    .stat-num{font-size:22px}
+    .toolbar{flex-direction:column}
+    .toolbar .search-box{min-width:auto;width:100%}
+    .ai-title{max-width:140px}
+    .ai-badge.sign,.ai-badge.dept{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a class="nav-home" href="admin.html">&#x2190; Admin Tools</a>
+  <span class="nav-title">GoDrop Archive<span class="nav-ver">v1.0</span></span>
+</nav>
+
+<div class="wrap">
+
+<header>
+  <div class="admin-badge"><span class="dot"></span>관리자 전용</div>
+  <h1><span>Go</span>Drop Archive<sup class="ver">v1.0</sup></h1>
+  <p>서류 보관소 관리</p>
+</header>
+
+<!-- Stats -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">전체 보관</div></div>
+  <div class="stat-card"><div class="stat-num" id="statToday">0</div><div class="stat-label">오늘 투입</div></div>
+  <div class="stat-card"><div class="stat-num" id="statDepts">0</div><div class="stat-label">부서</div></div>
+  <div class="stat-card"><div class="stat-num" id="statTypes">0</div><div class="stat-label">문서 유형</div></div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <input class="search-box" id="searchBox" placeholder="ID, 파일명, 상대방, 문서 유형으로 검색...">
+  <select id="filterDept">
+    <option value="">전체 부서</option>
+  </select>
+  <select id="filterType">
+    <option value="">전체 유형</option>
+  </select>
+  <button class="btn-export" id="btnExport">TSV 내보내기</button>
+  <button class="btn-clear-all" id="btnClearAll">전체 삭제</button>
+</div>
+
+<!-- Archive List -->
+<div class="archive-list" id="archiveList">
+  <div class="archive-empty">
+    <div class="ae-icon">&#x1F4ED;</div>
+    아직 보관된 서류가 없습니다
+  </div>
+</div>
+
+</div>
+
+<div class="footer">
+  GoDrop Archive v1.0 &middot; 관리자 전용<br>
+  Go Legal Portal &middot; Gowid Legal Tech &middot; 2026
+</div>
+
+<script>
+let archive = JSON.parse(localStorage.getItem('godrop_archive') || '[]');
+let filtered = [...archive];
+
+const $list = document.getElementById('archiveList');
+const $search = document.getElementById('searchBox');
+const $filterDept = document.getElementById('filterDept');
+const $filterType = document.getElementById('filterType');
+
+/* ── Init ── */
+buildFilters();
+updateStats();
+render();
+
+/* ── Filters ── */
+function buildFilters() {
+  const depts = [...new Set(archive.map(a => a.department || a.dept).filter(Boolean))].sort();
+  const types = [...new Set(archive.map(a => a.docType || a.type).filter(Boolean))].sort();
+  $filterDept.innerHTML = '<option value="">전체 부서</option>' + depts.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+  $filterType.innerHTML = '<option value="">전체 유형</option>' + types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+
+$search.addEventListener('input', applyFilters);
+$filterDept.addEventListener('change', applyFilters);
+$filterType.addEventListener('change', applyFilters);
+
+function applyFilters() {
+  const q = $search.value.toLowerCase().trim();
+  const dept = $filterDept.value;
+  const type = $filterType.value;
+  filtered = archive.filter(a => {
+    const aDept = a.department || a.dept || '';
+    const aType = a.docType || a.type || '';
+    if (dept && aDept !== dept) return false;
+    if (type && aType !== type) return false;
+    if (q) {
+      const haystack = [a.id, aType, aDept, a.counterparty, a.title, a.summary, ...(a.files||[]).map(f=>f.name)].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+  render();
+}
+
+/* ── Stats ── */
+function updateStats() {
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCount = archive.filter(a => a.timestamp && a.timestamp.startsWith(today)).length;
+  const depts = new Set(archive.map(a => a.department || a.dept).filter(Boolean));
+  const types = new Set(archive.map(a => a.docType || a.type).filter(Boolean));
+  document.getElementById('statTotal').textContent = archive.length;
+  document.getElementById('statToday').textContent = todayCount;
+  document.getElementById('statDepts').textContent = depts.size;
+  document.getElementById('statTypes').textContent = types.size;
+}
+
+/* ── Render ── */
+function render() {
+  if (filtered.length === 0) {
+    $list.innerHTML = '<div class="archive-empty"><div class="ae-icon">&#x1F4ED;</div>' + (archive.length === 0 ? '아직 보관된 서류가 없습니다' : '검색 결과가 없습니다') + '</div>';
+    return;
+  }
+  $list.innerHTML = filtered.map(a => {
+    const docType = a.docType || a.type || '기타';
+    const dept = a.department || a.dept || '-';
+    const sign = a.signType || '';
+    const title = a.title || a.files?.map(f=>f.name).join(', ') || '-';
+    const summary = a.summary || '';
+    const cp = a.counterparty || '';
+    return `
+    <div class="archive-item" data-id="${a.id}">
+      <span class="ai-icon">&#x1F4C1;</span>
+      <div class="ai-body">
+        <div class="ai-top">
+          <span class="ai-title">${esc(title)}</span>
+          <span class="ai-badge type">${esc(docType)}</span>
+          ${sign ? `<span class="ai-badge sign">${esc(sign)}</span>` : ''}
+          <span class="ai-badge dept">${esc(dept)}</span>
+        </div>
+        ${(summary || cp) ? `<div class="ai-mid">${cp ? esc(cp) : ''}${cp && summary ? ' · ' : ''}${summary ? esc(summary) : ''}</div>` : ''}
+        <div class="ai-bottom">
+          <span class="ai-files">${(a.files||[]).map(f=>esc(f.name)).join(', ')}</span>
+          <span class="ai-id">${a.id}</span>
+          <span class="ai-time">${a.dateStr || ''}</span>
+        </div>
+      </div>
+      <button class="ai-del" onclick="deleteItem('${a.id}')" title="삭제">&times;</button>
+    </div>`;
+  }).join('');
+}
+
+/* ── Delete ── */
+window.deleteItem = function(id) {
+  if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+  archive = archive.filter(a => a.id !== id);
+  localStorage.setItem('godrop_archive', JSON.stringify(archive));
+  buildFilters();
+  updateStats();
+  applyFilters();
+};
+
+document.getElementById('btnClearAll').addEventListener('click', () => {
+  if (!confirm(`전체 ${archive.length}건을 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  archive = [];
+  localStorage.setItem('godrop_archive', JSON.stringify(archive));
+  buildFilters();
+  updateStats();
+  applyFilters();
+});
+
+/* ── TSV Export ── */
+document.getElementById('btnExport').addEventListener('click', () => {
+  const data = filtered.length > 0 ? filtered : archive;
+  if (data.length === 0) return alert('내보낼 데이터가 없습니다.');
+  const header = ['ID','문서유형','서명유형','부서','상대방','제목','요약','파일명','일시'].join('\t');
+  const rows = data.map(a =>
+    [a.id, a.docType||a.type||'', a.signType||'', a.department||a.dept||'', a.counterparty||'', a.title||'', a.summary||'', (a.files||[]).map(f=>f.name).join('; '), a.dateStr||''].join('\t')
+  );
+  const tsv = [header, ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+tsv], {type:'text/tab-separated-values;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  const d = new Date();
+  link.download = `GoDrop_Archive_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.tsv`;
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ── Helpers ── */
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+<script src="auth-gate.js"></script>
+</body>
+</html>

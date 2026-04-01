@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Go Legal Portal — 고위드 법무 도구 모음</title>
 <style>
-  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#1e1e30;--purple:#7c8cf0;--green:#6ec8a0;--red:#ff6b6b;--yellow:#ffd43b;--blue:#74c0fc;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:16px}
+  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#1e1e30;--purple:#7c8cf0;--green:#6ec8a0;--red:#ff6b6b;--yellow:#ffd43b;--blue:#74c0fc;--orange:#e8a04c;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:16px}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
 
@@ -30,6 +30,7 @@
   .tool-card.green::before{background:linear-gradient(90deg,var(--green),rgba(110,200,160,.3))}
   .tool-card.blue::before{background:linear-gradient(90deg,var(--blue),rgba(116,192,252,.3))}
   .tool-card.yellow::before{background:linear-gradient(90deg,var(--yellow),rgba(255,212,59,.3))}
+  .tool-card.orange::before{background:linear-gradient(90deg,var(--orange),rgba(232,160,76,.3))}
 
   .tc-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
   .tc-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
@@ -37,12 +38,14 @@
   .green .tc-icon{background:rgba(110,200,160,.15);color:var(--green)}
   .blue .tc-icon{background:rgba(116,192,252,.15);color:var(--blue)}
   .yellow .tc-icon{background:rgba(255,212,59,.12);color:var(--yellow)}
+  .orange .tc-icon{background:rgba(232,160,76,.15);color:var(--orange)}
   .tc-title{font-size:17px;font-weight:700;color:var(--t50);line-height:1.3}
   .tc-title .tc-ver{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
   .purple .tc-ver{background:rgba(124,140,240,.15);color:var(--purple)}
   .green .tc-ver{background:rgba(110,200,160,.15);color:var(--green)}
   .blue .tc-ver{background:rgba(116,192,252,.15);color:var(--blue)}
   .yellow .tc-ver{background:rgba(255,212,59,.12);color:var(--yellow)}
+  .orange .tc-ver{background:rgba(232,160,76,.15);color:var(--orange)}
 
   .tc-desc{font-size:13px;color:var(--t60);line-height:1.7;margin-bottom:16px;min-height:62px}
 
@@ -52,6 +55,7 @@
   .green .tc-feat{border-color:rgba(110,200,160,.15);color:rgba(110,200,160,.7)}
   .blue .tc-feat{border-color:rgba(116,192,252,.15);color:rgba(116,192,252,.7)}
   .yellow .tc-feat{border-color:rgba(255,212,59,.15);color:rgba(255,212,59,.7)}
+  .orange .tc-feat{border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)}
 
   .tc-arrow{position:absolute;bottom:20px;right:20px;font-size:18px;color:var(--t15);transition:all .25s}
   .tool-card:hover .tc-arrow{color:var(--t60);transform:translateX(4px)}
@@ -88,17 +92,19 @@
   <div class="grid">
 
     <!-- Gommon Sense -->
-    <a class="tool-card purple" href="gommon-sense-v4.0.html">
+    <a class="tool-card purple" href="gommon-sense-v5.0.html">
       <div class="tc-header">
         <div class="tc-icon">&#x26A1;</div>
-        <div class="tc-title">Gommon Sense<span class="tc-ver">v4.0</span></div>
+        <div class="tc-title">Gommon Sense<span class="tc-ver">v5.0</span></div>
       </div>
       <div class="tc-desc">
-        업무 상황을 설명하면 AI가 5대 Grey Zone 축으로 법적 리스크를 자동 분석합니다. Slack으로 법무팀에 바로 검토 요청까지.
+        엘박스·슈퍼로이어 선례 기본 탑재. 리스크 체크 + 문서 붙여넣기 1차 법률검토까지 한번에.
       </div>
       <div class="tc-features">
         <span class="tc-feat">AI 리스크 분석</span>
-        <span class="tc-feat">5대 축 스캔</span>
+        <span class="tc-feat">1차 법률검토</span>
+        <span class="tc-feat">PDF/Word 업로드</span>
+        <span class="tc-feat">엘박스+슈퍼로이어</span>
         <span class="tc-feat">Slack 연동</span>
       </div>
       <div class="tc-arrow">&#x2192;</div>
@@ -155,10 +161,29 @@
       <div class="tc-arrow">&#x2192;</div>
     </a>
 
+    <!-- GoDrop -->
+    <a class="tool-card orange" href="godrop-v1.0.html">
+      <div class="tc-header">
+        <div class="tc-icon">&#x1F4E5;</div>
+        <div class="tc-title">GoDrop<span class="tc-ver">v1.0</span></div>
+      </div>
+      <div class="tc-desc">
+        계약서, 공문, 스캔본을 던져 넣으면 AI가 자동 분류하고 아카이빙합니다. 도서관 무인 반납함처럼, 넣기만 하면 끝.
+      </div>
+      <div class="tc-features">
+        <span class="tc-feat">드래그 &amp; 드롭</span>
+        <span class="tc-feat">AI 자동 분류</span>
+        <span class="tc-feat">서류 보관소</span>
+      </div>
+      <div class="tc-arrow">&#x2192;</div>
+    </a>
+
   </div>
 
   <div class="status-row">
     <div class="status-pill"><span class="s-dot"></span>Gemini 2.5 Flash</div>
+    <div class="status-pill"><span class="s-dot"></span>엘박스 선례 내장</div>
+    <div class="status-pill"><span class="s-dot"></span>슈퍼로이어 선례 내장</div>
     <div class="status-pill"><span class="s-dot"></span>Google Sheets 연동</div>
     <div class="status-pill"><span class="s-dot"></span>Google Docs 연동</div>
   </div>
@@ -166,7 +191,8 @@
 
 <div class="footer">
   Go Legal Portal &middot; Gowid Legal Tech &middot; 2026<br>
-  AI 기반 1차 분석 도구 &middot; 최종 판단은 법무팀 검토를 거쳐 주세요
+  AI 기반 1차 분석 도구 &middot; 최종 판단은 법무팀 검토를 거쳐 주세요<br>
+  <a href="admin.html" style="color:var(--t15);text-decoration:none;font-size:10px;transition:color .2s" onmouseover="this.style.color='var(--t30)'" onmouseout="this.style.color='var(--t15)'">Admin</a>
 </div>
 
 <script src="auth-gate.js"></script>

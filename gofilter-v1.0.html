@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go_filter v1.0 — 고위드 관련 건 필터링</title>
+<style>
+  :root{--bg:#0f0f14;--card:#1a1a24;--accent:#56d4a0;--accent-dim:rgba(86,212,160,.15);--red:#ff6b6b;--red-bg:rgba(255,107,107,.12);--yellow:#ffd43b;--yellow-bg:rgba(255,212,59,.10);--green:#69db7c;--green-bg:rgba(105,219,124,.10);--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
+  .wrap{max-width:960px;margin:0 auto;padding:20px}
+  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(15,15,20,.95);border-bottom:1px solid var(--t08);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+  .top-nav .nav-home{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t60);text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent}
+  .top-nav .nav-home:hover{color:var(--t50);background:var(--t08);border-color:var(--t15)}
+  .top-nav .nav-title{font-size:13px;color:var(--t80);font-weight:600;padding:6px 12px}
+  .top-nav .nav-title .nav-ver{font-size:10px;color:var(--accent);font-weight:600;margin-left:4px}
+  header{padding:32px 0;text-align:center;border-bottom:1px solid var(--t15)}
+  header h1{font-size:24px;font-weight:700;color:var(--t50)}
+  header h1 span{color:var(--accent)}
+  header p{font-size:13px;color:var(--t60);margin-top:6px}
+
+  .upload-zone{background:var(--card);border:2px dashed var(--t15);border-radius:var(--r);padding:40px;text-align:center;margin-top:24px;cursor:pointer;transition:all .2s}
+  .upload-zone:hover{border-color:var(--accent);background:var(--accent-dim)}
+  .upload-zone input{display:none}
+  .upload-zone .uz-icon{font-size:36px;margin-bottom:8px}
+  .upload-zone .uz-text{font-size:14px;color:var(--t60)}
+  .upload-zone .uz-hint{font-size:12px;color:var(--t30);margin-top:4px}
+
+  .stats-row{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+  .stat-card{flex:1;min-width:140px;background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:16px;text-align:center}
+  .stat-card .sc-num{font-size:28px;font-weight:700}
+  .stat-card .sc-num.green{color:var(--green)}
+  .stat-card .sc-num.red{color:var(--red)}
+  .stat-card .sc-num.yellow{color:var(--yellow)}
+  .stat-card .sc-label{font-size:12px;color:var(--t60);margin-top:4px}
+
+  .filter-controls{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;align-items:center}
+  .filter-btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;border:1px solid var(--t15);background:var(--t08);color:var(--t60)}
+  .filter-btn:hover{background:var(--t15);color:var(--t80)}
+  .filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+  .filter-btn.export{background:var(--accent);color:#111;border-color:var(--accent)}
+  .filter-btn.export:hover{opacity:.9}
+  .search-input{flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--t15);border-radius:8px;background:var(--t08);color:var(--t50);font-size:13px;font-family:inherit}
+  .search-input:focus{outline:none;border-color:var(--accent)}
+
+  .chat-list{margin-top:16px}
+  .chat-item{background:var(--card);border:1px solid var(--t15);border-radius:8px;padding:14px 16px;margin-bottom:6px;display:flex;align-items:center;gap:12px;transition:all .15s}
+  .chat-item:hover{border-color:var(--t30)}
+  .chat-item.excluded{opacity:.4}
+  .ci-check{width:20px;height:20px;border-radius:4px;border:2px solid var(--t30);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:12px}
+  .ci-check.checked{background:var(--accent);border-color:var(--accent);color:#111}
+  .ci-source{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;flex-shrink:0}
+  .ci-source.lbox{background:rgba(116,192,252,.12);color:#74c0fc}
+  .ci-source.sl{background:rgba(160,140,240,.12);color:#a08cf0}
+  .ci-body{flex:1;min-width:0}
+  .ci-title{font-size:13px;color:var(--t80);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ci-meta{font-size:11px;color:var(--t30);margin-top:2px}
+  .ci-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500}
+  .ci-tag.gowid{background:var(--green-bg);color:var(--green)}
+  .ci-tag.personal{background:var(--red-bg);color:var(--red)}
+  .ci-tag.maybe{background:var(--yellow-bg);color:var(--yellow)}
+
+  .pagination{display:flex;gap:8px;justify-content:center;margin-top:16px}
+  .page-btn{padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--t15);background:var(--t08);color:var(--t60);font-family:inherit}
+  .page-btn.active{border-color:var(--accent);color:var(--accent)}
+
+  .hidden{display:none!important}
+  .copy-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#111;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200}
+  .copy-toast.show{opacity:1}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a class="nav-home" href="index.html">&#x2190; Go Legal Portal</a>
+  <span class="nav-title">Go_filter<span class="nav-ver">v1.0</span></span>
+</nav>
+<header>
+  <h1><span>Go_</span>filter<span style="font-size:12px;color:var(--accent);vertical-align:super;margin-left:4px">v1.0</span></h1>
+  <p>엘박스 · 슈퍼로이어 추출 데이터에서 고위드 관련 건만 필터링합니다</p>
+</header>
+<div class="wrap">
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept=".json" multiple onchange="handleFiles(event)">
+    <div class="uz-icon">&#x1F4C2;</div>
+    <div class="uz-text">추출된 JSON 파일을 여기에 드래그하거나 클릭하여 업로드</div>
+    <div class="uz-hint">lbox_export_*.json, superlawyer_full_*.json 파일을 함께 업로드할 수 있습니다</div>
+  </div>
+
+  <div class="stats-row hidden" id="statsRow">
+    <div class="stat-card"><div class="sc-num" id="totalCount">0</div><div class="sc-label">전체</div></div>
+    <div class="stat-card"><div class="sc-num green" id="gowidCount">0</div><div class="sc-label">고위드 관련</div></div>
+    <div class="stat-card"><div class="sc-num red" id="excludeCount">0</div><div class="sc-label">제외</div></div>
+    <div class="stat-card"><div class="sc-num yellow" id="maybeCount">0</div><div class="sc-label">수동 확인 필요</div></div>
+  </div>
+
+  <div class="filter-controls hidden" id="filterControls">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">전체</button>
+    <button class="filter-btn" data-filter="gowid" onclick="setFilter('gowid',this)">고위드</button>
+    <button class="filter-btn" data-filter="maybe" onclick="setFilter('maybe',this)">확인 필요</button>
+    <button class="filter-btn" data-filter="excluded" onclick="setFilter('excluded',this)">제외</button>
+    <button class="filter-btn" style="border-color:var(--green);color:var(--green);font-weight:700" onclick="selectGowidOnly()">고위드 977건만 선택 (나머지 전부 해제)</button>
+    <input class="search-input" placeholder="제목 검색..." oninput="searchFilter(this.value)">
+    <button class="filter-btn export" onclick="exportFiltered()">고위드 건만 TSV 내보내기</button>
+    <button class="filter-btn export" style="background:#7c8cf0" onclick="exportFilteredJSON()">고위드 건만 JSON 내보내기</button>
+  </div>
+
+  <div id="chatList" class="chat-list"></div>
+  <div id="pagination" class="pagination"></div>
+</div>
+<div class="copy-toast" id="copyToast"></div>
+
+<script>
+// ========== STATE ==========
+let allChats = [];
+let currentFilter = 'all';
+let searchTerm = '';
+let currentPage = 0;
+const PAGE_SIZE = 50;
+
+// ========== GOWID KEYWORDS ==========
+const GOWID_KEYWORDS = [
+  '고위드', 'gowid', 'GOWID', 'GoWid',
+  'FUEL', 'fuel', 'VWS', 'vws', 'GWS',
+  'F53', 'F83', 'F61', 'F87', 'F01', 'F02', 'F03', 'F11',
+  'V01', 'V02', 'V03', 'V04', 'V11',
+  'E01', 'E02', 'E03', 'G01', 'G02', 'G03', 'G04', 'G05', 'G06', 'G07', 'G08',
+  'S02', 'S03', 'S04', 'S05',
+  '브라운백', '블리스', 'bliss', '페이바이카드', 'PBC', 'Pay by Card',
+  '선정산', '한도 관리', '위탁판매', '구매대행', '매매계약',
+  '연대보증', '근보증', '보증금 계약', '분할상환',
+  '출금제한', '매출 집금', '채권양도담보', '채권근담보',
+  '롯데카드', 'BC카드', '신한카드', 'PLCC',
+  '포인트 운영', '약관 개정', '이용약관',
+  '글로벌 정산', 'Global Settlement',
+  '담보설정', '질권', '근저당', '동산담보',
+  '핏펫', '핏크루', '몬스타', '디트라이브', '설로인', '품격한우',
+  '나인독', '피에로컴퍼니', '더스윙', '태그바이', '블링크프로젝트',
+  '고넥스', 'KONEX', '고위드데이터', '고위드넥서스',
+  '엔진', 'ENGINE', '렌탈', '구독',
+  '개인정보 처리방침', '신용정보', 'KCB', 'KODATA',
+  'NDA_위펀', '위펀x고위드', 'NHN KCP', 'KG이니시스',
+  '네이버페이', '토스페이먼츠',
+  'OTA VCN', 'VCN',
+  '법인카드', '법인 신용카드',
+  '바리코퍼레이션', '로랩스', '잇올', '브룩허스트',
+  'PIT STOP', '피트스탑', '리바운드',
+  '컴패니언그라운드', '프랩스', '교환사채',
+  '착한의사', '경남거제', '이니렌탈', '폰고',
+  '다컴시스템', '메리츠',
+  '법무 검토', '법적 검토', '법률 검토', '계약서 검토', '계약서 요약',
+  '수수료', '대부업', '여전법', '약관규제법',
+];
+
+// 제외 키워드 (개인/비고위드)
+const EXCLUDE_KEYWORDS = [
+  '교통사고', '상속포기', '특별대리인', '이혼', '양육',
+  '심리치료', '공예', '비즈니스 모델 보호',
+  '부동산 임의경매', '부동산 매매예약', '전세보증금 정산',
+  '부당이득반환청구소송 참여',
+  '공동주택 누수', '임대차 계약 갱신',
+  'GRAN PASEO', '日本', 'SKYFLAGに関する', '동사무소에서 2명',
+  'Industry Alpha', '以下のように',
+  '히말라야 캡처',
+  '토지 관리 위임', '부동산 임차인',
+  '의약품 수출 관련 법인 설립',
+];
+
+// ========== CLASSIFICATION ==========
+function classifyChat(chat) {
+  const text = [
+    chat.title || '',
+    ...(chat.questions || []),
+    ...(chat.answers || []).map(a => typeof a === 'string' ? a.substring(0, 500) : ''),
+    chat.threadText ? chat.threadText.substring(0, 1000) : ''
+  ].join(' ');
+
+  // 제외 키워드 먼저 체크
+  const hasExclude = EXCLUDE_KEYWORDS.some(kw => text.includes(kw));
+  const hasGowid = GOWID_KEYWORDS.some(kw => text.includes(kw));
+
+  if (hasExclude && !hasGowid) return 'excluded';
+  if (hasGowid) return 'gowid';
+
+  // 제목 기반 추가 판단
+  const title = (chat.title || '').toLowerCase();
+  if (title.includes('요약') && !hasGowid && !hasExclude) return 'maybe';
+
+  return 'maybe'; // 판단 불가 → 수동 확인
+}
+
+// ========== FILE HANDLING ==========
+function handleFiles(event) {
+  const files = event.target.files;
+  if (!files.length) return;
+
+  allChats = [];
+  let loaded = 0;
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target.result);
+        const source = json.source?.includes('LBOX') ? 'lbox' : 'superlawyer';
+        const chats = json.chats || [];
+
+        chats.forEach(chat => {
+          allChats.push({
+            ...chat,
+            source,
+            classification: classifyChat(chat),
+            included: true // 기본값
+          });
+        });
+      } catch (err) {
+        console.error('파일 파싱 오류:', err);
+      }
+
+      loaded++;
+      if (loaded === files.length) {
+        // 분류 결과에 따라 included 설정
+        allChats.forEach(c => {
+          c.included = c.classification === 'gowid' || c.classification === 'maybe';
+        });
+        renderAll();
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// ========== RENDER ==========
+function renderAll() {
+  document.getElementById('statsRow').classList.remove('hidden');
+  document.getElementById('filterControls').classList.remove('hidden');
+  document.getElementById('uploadZone').style.display = 'none';
+  updateStats();
+  currentPage = 0;
+  renderList();
+}
+
+function updateStats() {
+  document.getElementById('totalCount').textContent = allChats.length;
+  document.getElementById('gowidCount').textContent = allChats.filter(c => c.classification === 'gowid').length;
+  document.getElementById('excludeCount').textContent = allChats.filter(c => c.classification === 'excluded').length;
+  document.getElementById('maybeCount').textContent = allChats.filter(c => c.classification === 'maybe').length;
+}
+
+function getFiltered() {
+  let filtered = allChats;
+  if (currentFilter !== 'all') filtered = filtered.filter(c => c.classification === currentFilter);
+  if (searchTerm) filtered = filtered.filter(c => (c.title || '').toLowerCase().includes(searchTerm.toLowerCase()));
+  return filtered;
+}
+
+function renderList() {
+  const filtered = getFiltered();
+  const start = currentPage * PAGE_SIZE;
+  const page = filtered.slice(start, start + PAGE_SIZE);
+
+  const html = page.map((chat, i) => {
+    const idx = start + i;
+    const srcCls = chat.source === 'lbox' ? 'lbox' : 'sl';
+    const srcLabel = chat.source === 'lbox' ? 'LBOX' : 'SL';
+    const tagCls = chat.classification;
+    const tagLabel = tagCls === 'gowid' ? '고위드' : tagCls === 'excluded' ? '제외' : '확인';
+    const checked = chat.included;
+    const date = chat.createdAt ? chat.createdAt.slice(0, 10) : (chat.date || '');
+    const qCount = (chat.questions || []).length;
+    const aCount = (chat.answers || []).length;
+
+    return `<div class="chat-item ${checked ? '' : 'excluded'}">
+      <div class="ci-check ${checked ? 'checked' : ''}" onclick="toggleInclude(${allChats.indexOf(chat)})">${checked ? '✓' : ''}</div>
+      <span class="ci-source ${srcCls}">${srcLabel}</span>
+      <div class="ci-body">
+        <div class="ci-title">${escHtml(chat.title || '(제목 없음)')}</div>
+        <div class="ci-meta">${date} · Q:${qCount} A:${aCount}</div>
+      </div>
+      <span class="ci-tag ${tagCls}">${tagLabel}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('chatList').innerHTML = html || '<p style="text-align:center;color:var(--t30);padding:40px">결과 없음</p>';
+
+  // 페이지네이션
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (totalPages > 1) {
+    let pHtml = '';
+    for (let p = 0; p < totalPages; p++) {
+      pHtml += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p + 1}</button>`;
+    }
+    document.getElementById('pagination').innerHTML = pHtml;
+  } else {
+    document.getElementById('pagination').innerHTML = '';
+  }
+}
+
+function toggleInclude(idx) {
+  allChats[idx].included = !allChats[idx].included;
+  // 분류도 업데이트
+  if (!allChats[idx].included && allChats[idx].classification !== 'excluded') {
+    allChats[idx].classification = 'excluded';
+  } else if (allChats[idx].included && allChats[idx].classification === 'excluded') {
+    allChats[idx].classification = 'gowid';
+  }
+  updateStats();
+  renderList();
+}
+
+function selectGowidOnly() {
+  // 고위드 분류된 건만 선택, 나머지(maybe+excluded)는 전부 해제
+  allChats.forEach(c => {
+    if (c.classification === 'gowid') {
+      c.included = true;
+    } else {
+      c.included = false;
+    }
+  });
+  updateStats(); renderList();
+  showToast('고위드 관련 ' + allChats.filter(c => c.included).length + '건만 선택됨');
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  currentPage = 0;
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function searchFilter(term) {
+  searchTerm = term;
+  currentPage = 0;
+  renderList();
+}
+
+function goPage(p) { currentPage = p; renderList(); }
+
+// ========== EXPORT ==========
+function exportFiltered() {
+  const included = allChats.filter(c => c.included);
+  if (!included.length) { showToast('내보낼 데이터 없음'); return; }
+
+  const tH = ['출처','날짜','제목','유형','질문','답변','첨부파일'];
+  const tR = included.map(c => [
+    c.source === 'lbox' ? '엘박스' : '슈퍼로이어',
+    c.createdAt ? c.createdAt.slice(0, 10) : (c.date || ''),
+    c.title || '',
+    c.type || '',
+    (c.questions || []).join(' | ').substring(0, 3000),
+    (c.answers || []).join(' | ').substring(0, 3000),
+    (c.attachments || []).join(', ')
+  ]);
+  const tsv = [tH.join('\t'), ...tR.map(r => r.map(v => String(v).replace(/[\t\n\r]/g, ' ')).join('\t'))].join('\n');
+
+  navigator.clipboard.writeText(tsv).then(() => {
+    showToast(`${included.length}건 TSV 복사 완료 — Google Sheets에 Ctrl+V`);
+  }).catch(() => {
+    downloadFile('gowid_filtered.tsv', tsv, 'text/tab-separated-values');
+    showToast('TSV 파일 다운로드 완료');
+  });
+}
+
+function exportFilteredJSON() {
+  const included = allChats.filter(c => c.included);
+  if (!included.length) { showToast('내보낼 데이터 없음'); return; }
+
+  const exportData = {
+    exportedAt: new Date().toISOString(),
+    source: 'Go_filter — 고위드 관련 건 필터링',
+    totalFiltered: included.length,
+    chats: included.map(c => ({
+      source: c.source === 'lbox' ? '엘박스' : '슈퍼로이어',
+      title: c.title,
+      date: c.createdAt ? c.createdAt.slice(0, 10) : (c.date || ''),
+      type: c.type,
+      questions: c.questions,
+      answers: c.answers,
+      attachments: c.attachments,
+      threadText: c.threadText
+    }))
+  };
+
+  downloadFile('gowid_filtered.json', JSON.stringify(exportData, null, 2), 'application/json');
+  showToast(`${included.length}건 JSON 다운로드 완료`);
+}
+
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type: type + ';charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ========== UTILS ==========
+function escHtml(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showToast(msg) {
+  const t = document.getElementById('copyToast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Drag & drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--accent)'; });
+zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.style.borderColor = '';
+  const dt = new DataTransfer();
+  Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
+  document.getElementById('fileInput').files = dt.files;
+  handleFiles({ target: { files: dt.files } });
+});
+</script>
+<script src="auth-gate.js"></script>
+</body>
+</html>

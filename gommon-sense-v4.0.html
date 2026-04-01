@@ -153,11 +153,11 @@
 <body>
 <nav class="top-nav">
   <a class="nav-home" href="index.html">&#x2190; Go Legal Portal</a>
-  <span class="nav-title" onclick="resetAll()">Gommon Sense<span class="nav-ver">v4.0</span></span>
+  <span class="nav-title" onclick="resetAll()">Gommon Sense<span class="nav-ver">v5.0</span></span>
 </nav>
 <header>
-  <h1><span>Gommon</span> Sense<span class="ver">v4.0</span></h1>
-  <p>상황을 설명하면 AI가 법적 리스크를 분석해 드립니다</p>
+  <h1><span>Gommon</span> Sense<span class="ver">v5.0</span></h1>
+  <p>상황을 설명하면 AI가 과거 검토 선례를 참조하여 법적 리스크를 분석합니다</p>
 </header>
 <div class="wrap">
   <div class="input-card">
@@ -183,6 +183,8 @@
     </div>
     <div class="api-status hidden" id="slackStatus"></div>
 
+    <div id="precedentStatus" style="font-size:12px;color:var(--t30);margin-bottom:12px">선례 DB 로드 중...</div>
+    <input type="file" id="precedentFile" accept=".json" style="display:none" onchange="handlePrecedentUpload(event)">
     <h2>어떤 상황인지 알려 주세요</h2>
     <p class="hint">진행하려는 업무, 검토가 필요한 상황, 궁금한 점 등을 자유롭게 적어 주세요.</p>
     <textarea class="main-input" id="userInput" placeholder="예: FUEL 수수료를 올리려고 합니다&#10;&#10;예: 해외 파트너사와 데이터 공유 계약을 맺으려 합니다&#10;&#10;예: 신규 약관에 자동연장 조항을 넣으려고 합니다" oninput="toggleBtn()"></textarea>
@@ -380,21 +382,167 @@ const SYSTEM_PROMPT = `당신은 고위드(Gowid) 실무부서 담당자를 위�
 - slackDraft는 실무자가 그대로 복사해서 법무팀 Slack 채널에 보낼 수 있는 검토 요청 메시지
 - tag는 해당 플래그의 핵심을 2-4자로 압축 (예: 형식괴리, 이자성, 파기의무, 배임방어, 불공정)`;
 
+// ========== 선례 DB ==========
+let precedentDB = [];
+let precedentLoaded = false;
+
+async function loadPrecedentDB() {
+  // 1순위: 같은 폴더의 gowid_filtered.json
+  // 2순위: localStorage 캐시
+  const cached = localStorage.getItem('gowid_precedent_db');
+  if (cached) {
+    try {
+      precedentDB = JSON.parse(cached);
+      precedentLoaded = true;
+      updatePrecedentStatus();
+      return;
+    } catch(e) {}
+  }
+
+  try {
+    const res = await fetch('gowid_filtered.json');
+    if (res.ok) {
+      const data = await res.json();
+      precedentDB = (data.chats || []).map(c => ({
+        title: c.title || '',
+        source: c.source || '',
+        date: c.date || '',
+        q: (c.questions || []).slice(0, 3).join(' ').substring(0, 500),
+        a: (c.answers || []).slice(0, 2).join(' ').substring(0, 1500),
+        tags: extractTags(c.title + ' ' + ((c.questions || [])[0] || ''))
+      }));
+      // localStorage에 경량 버전 캐시 (10MB 제한 대비 축약)
+      try {
+        const light = precedentDB.map(p => ({
+          title: p.title, source: p.source, date: p.date,
+          q: p.q.substring(0, 200), a: p.a.substring(0, 500), tags: p.tags
+        }));
+        localStorage.setItem('gowid_precedent_db', JSON.stringify(light));
+      } catch(e) { /* localStorage 용량 초과 시 무시 */ }
+      precedentLoaded = true;
+    }
+  } catch(e) {
+    console.log('선례 DB 로드 실패 (gowid_filtered.json 없음) — 수동 업로드 가능');
+  }
+  updatePrecedentStatus();
+}
+
+function extractTags(text) {
+  const tagMap = {
+    'FUEL': ['FUEL','fuel','선정산','F53','F83','F61','F87'],
+    'VWS': ['VWS','vws','GWS','구매대행','위탁판매','V01','V02','V03','매매계약'],
+    'ENGINE': ['엔진','ENGINE','렌탈','E01','E02','E03'],
+    '구독': ['구독','블리스','S02','S03','S04','S05'],
+    '카드': ['카드','PLCC','롯데카드','BC카드','신한카드','법인카드'],
+    '담보': ['담보','질권','근저당','채권양도','채권근담보','동산담보'],
+    '보증': ['연대보증','보증금','근보증'],
+    '데이터': ['개인정보','신용정보','처리방침'],
+    '약관': ['약관','이용약관','포인트'],
+    '글로벌': ['글로벌','Global','해외','외환','PBC','송금'],
+    'NDA': ['NDA','비밀유지'],
+    '소송': ['고소','소송','판결','강제집행'],
+    '투자': ['교환사채','주주간','출자전환','유상증자'],
+  };
+  const tags = [];
+  for (const [tag, kws] of Object.entries(tagMap)) {
+    if (kws.some(kw => text.includes(kw))) tags.push(tag);
+  }
+  return tags;
+}
+
+function searchPrecedents(userInput, maxResults = 5) {
+  if (!precedentDB.length) return [];
+
+  const inputTags = extractTags(userInput);
+  const inputWords = userInput.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+
+  const scored = precedentDB.map(p => {
+    let score = 0;
+    // 태그 매칭 (가장 중요)
+    const tagOverlap = p.tags.filter(t => inputTags.includes(t)).length;
+    score += tagOverlap * 10;
+
+    // 제목+질문 키워드 매칭
+    const pText = (p.title + ' ' + p.q).toLowerCase();
+    inputWords.forEach(w => { if (pText.includes(w)) score += 2; });
+
+    return { ...p, score };
+  }).filter(p => p.score > 0);
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, maxResults);
+}
+
+function formatPrecedentsForPrompt(precedents) {
+  if (!precedents.length) return '';
+  let text = '\n\n## 과거 검토 선례 (엘박스/슈퍼로이어 실제 검토 이력)\n\n';
+  text += '아래는 고위드 법무팀이 과거에 유사한 이슈를 검토한 실제 기록입니다. 현재 이슈 분석 시 참고하되, 맹목적으로 따르지 말고 현재 상황에 맞게 판단하세요.\n\n';
+  precedents.forEach((p, i) => {
+    text += `### 선례 ${i + 1}: ${p.title} (${p.source}, ${p.date})\n`;
+    text += `- 질문 요지: ${p.q.substring(0, 300)}\n`;
+    text += `- 검토 결과 요지: ${p.a.substring(0, 800)}\n\n`;
+  });
+  return text;
+}
+
+function updatePrecedentStatus() {
+  const el = document.getElementById('precedentStatus');
+  if (!el) return;
+  if (precedentLoaded && precedentDB.length > 0) {
+    el.innerHTML = `<span style="color:var(--green)">&#x2713;</span> 선례 DB ${precedentDB.length}건 로드됨`;
+    el.style.color = 'var(--green)';
+  } else {
+    el.innerHTML = `선례 DB 미연결 — <span style="cursor:pointer;text-decoration:underline" onclick="document.getElementById('precedentFile').click()">JSON 업로드</span>`;
+    el.style.color = 'var(--t30)';
+  }
+}
+
+function handlePrecedentUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      precedentDB = (data.chats || []).map(c => ({
+        title: c.title || '',
+        source: c.source || '',
+        date: c.date || '',
+        q: (c.questions || []).slice(0, 3).join(' ').substring(0, 500),
+        a: (c.answers || []).slice(0, 2).join(' ').substring(0, 1500),
+        tags: extractTags(c.title + ' ' + ((c.questions || [])[0] || ''))
+      }));
+      precedentLoaded = true;
+      try {
+        const light = precedentDB.map(p => ({
+          title: p.title, source: p.source, date: p.date,
+          q: p.q.substring(0, 200), a: p.a.substring(0, 500), tags: p.tags
+        }));
+        localStorage.setItem('gowid_precedent_db', JSON.stringify(light));
+      } catch(e) {}
+      updatePrecedentStatus();
+    } catch(err) { alert('JSON 파싱 실패: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
 // ========== API ==========
-const DEFAULT_KEY = 'AIzaSyAxSCpAelKr7Hj-M9xZeWP5XKb8mlAKfsc';
+const DEFAULT_KEY = 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak';
 const DEFAULT_SLACK_TOKEN = 'xoxb-523970022560-10596436186850-EHekobiznpnPYAfU84wCUfgs';
 const DEFAULT_SLACK_USER = 'U080B5UD7RA';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-async function callAI(userText) {
+async function callAI(userText, precedentContext = '') {
   const key = localStorage.getItem('gowid_gemini_key') || DEFAULT_KEY;
   if (!key) throw new Error('API 키가 설정되지 않았습니다.');
+
+  const fullSystemPrompt = SYSTEM_PROMPT + precedentContext;
 
   const res = await fetch(`${GEMINI_URL}?key=${key}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      system_instruction: { parts: [{ text: fullSystemPrompt }] },
       contents: [{ parts: [{ text: userText }] }],
       generationConfig: {
         temperature: 0.2,
@@ -518,15 +666,21 @@ async function scan() {
     combined += `\n\n[첨부 문서]\n${docText}`;
   }
 
+  // 선례 검색 & 프롬프트 주입
+  const precedents = searchPrecedents(situationText + ' ' + docText, 5);
+  const precedentContext = formatPrecedentsForPrompt(precedents);
+
   const btn = document.getElementById('scanBtn');
   btn.disabled = true;
-  btn.textContent = '분석 중...';
+  btn.textContent = precedents.length > 0
+    ? `분석 중... (선례 ${precedents.length}건 참조)`
+    : '분석 중...';
 
   document.getElementById('resultArea').innerHTML = `<div class="loading"><div class="spinner"></div><p>법적 리스크를 분석하고 있습니다...</p></div>`;
 
   try {
-    const result = await callAI(combined);
-    renderResult(result);
+    const result = await callAI(combined, precedentContext);
+    renderResult(result, precedents);
   } catch (e) {
     document.getElementById('resultArea').innerHTML = `<div class="error-box">${escHtml(e.message)}</div>`;
   } finally {
@@ -544,8 +698,19 @@ const AXIS_MAP = {
   terms:       { icon: '□', label: '약관', cls: 'terms' }
 };
 
-function renderResult(r) {
+function renderResult(r, precedents = []) {
   let html = '<div class="result">';
+
+  // 참조 선례 표시
+  if (precedents.length > 0) {
+    html += `<div style="margin-bottom:16px;padding:14px 18px;background:rgba(86,212,160,.06);border:1px solid rgba(86,212,160,.15);border-radius:var(--r)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--green);font-weight:600;margin-bottom:8px">참조 선례 ${precedents.length}건</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">`;
+    precedents.forEach(p => {
+      html += `<span style="font-size:11px;padding:3px 10px;border-radius:12px;background:rgba(86,212,160,.1);color:var(--green);border:1px solid rgba(86,212,160,.2)">${escHtml(p.source)} · ${escHtml(p.title.substring(0, 40))}</span>`;
+    });
+    html += `</div></div>`;
+  }
 
   // Headline
   html += `<div class="headline-box">
@@ -735,6 +900,8 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('slackSection').classList.add('hidden');
   document.getElementById('slackStatus').classList.add('hidden');
   toggleBtn();
+  // 선례 DB 자동 로드
+  loadPrecedentDB();
 });
 
 // Ctrl+Enter to scan

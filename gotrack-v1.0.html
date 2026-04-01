@@ -220,15 +220,15 @@
 </header>
 <div class="wrap">
   <div class="input-card">
-    <!-- API Key -->
-    <div id="apiSection">
+    <!-- API Key (기본 내장 — 숨김) -->
+    <div id="apiSection" class="hidden">
       <div class="api-row">
         <input type="password" id="apiKey" placeholder="Gemini API 키를 입력하세요" />
         <button class="save-btn" onclick="saveKey()">저장</button>
       </div>
       <div class="api-link">API 키가 없다면 → <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에서 발급</div>
     </div>
-    <div class="api-status hidden" id="apiStatus">✓ API 키 저장됨 · <span style="cursor:pointer;text-decoration:underline" onclick="showKeyInput()">변경</span></div>
+    <div class="api-status hidden" id="apiStatus"></div>
 
     <h2>어떤 계약서가 궁금하신가요?</h2>
     <p class="hint">계약서 코드, 조항명, 또는 변경 내용에 대한 질문을 자유롭게 입력하세요.</p>
@@ -413,7 +413,7 @@ const SYSTEM_PROMPT = `당신은 고위드(GOWID)의 표준 계약서 변경 이
 - 추측하지 말 것. 알고 있는 정보 범위 내에서만 답변하고, 불확실한 부분은 명시할 것`;
 
 // ========== API ==========
-const DEFAULT_KEY = 'AIzaSyAxSCpAelKr7Hj-M9xZeWP5XKb8mlAKfsc';
+const DEFAULT_KEY = 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 async function callAI(userText) {
@@ -927,9 +927,9 @@ function filterTree() {
 // Init
 window.addEventListener('DOMContentLoaded', () => {
   renderTree();
-  // 기본 키가 있으므로 항상 API 섹션 숨김
+  // 기본 키 내장 — API 섹션 및 상태 모두 숨김
   document.getElementById('apiSection').classList.add('hidden');
-  document.getElementById('apiStatus').classList.remove('hidden');
+  document.getElementById('apiStatus').classList.add('hidden');
   toggleBtn();
 });
 

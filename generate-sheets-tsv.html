@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>TSV 생성기</title>
+<style>body{font-family:sans-serif;background:#0f0f14;color:#eee;padding:40px;text-align:center}
+button{padding:14px 28px;font-size:16px;background:#56d4a0;color:#111;border:none;border-radius:8px;cursor:pointer;font-weight:700;margin:10px}
+#status{margin-top:20px;font-size:14px;color:#aaa;white-space:pre-line}
+</style></head><body>
+<h1>Google Sheets용 요약 TSV 생성</h1>
+<p>gowid_filtered.json을 업로드하면 요약 TSV를 자동 생성합니다</p>
+<input type="file" id="f" accept=".json" style="display:none">
+<button onclick="document.getElementById('f').click()">JSON 파일 업로드</button>
+<div id="status"></div>
+<script>
+document.getElementById('f').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('status');
+  status.textContent = '파일 읽는 중... (' + (file.size/1024/1024).toFixed(1) + 'MB)';
+
+  const text = await file.text();
+  status.textContent = 'JSON 파싱 중...';
+  const data = JSON.parse(text);
+  const chats = data.chats || [];
+  status.textContent = `${chats.length}건 처리 중...`;
+
+  const kwMap = {
+    'FUEL': ['FUEL','fuel','선정산','F53','F83','F61','F87'],
+    'VWS': ['VWS','vws','GWS','구매대행','위탁판매','V01','V02','V03','매매계약'],
+    'ENGINE': ['엔진','ENGINE','렌탈','E01','E02','E03'],
+    '구독': ['구독','블리스','S02','S03','S04','S05','커피머신'],
+    '카드': ['카드','PLCC','롯데카드','BC카드','신한카드','법인카드'],
+    '담보': ['담보','질권','근저당','채권양도','채권근담보','동산담보','재고자산'],
+    '보증': ['연대보증','보증금','근보증','포괄 근보증'],
+    '데이터': ['개인정보','신용정보','처리방침','KCB','KODATA'],
+    '약관': ['약관','이용약관','포인트 운영','포인트 약관'],
+    '글로벌': ['글로벌','Global','해외','외환','PBC','송금'],
+    'NDA': ['NDA','비밀유지','기밀','비밀보장'],
+    '소송': ['고소','소송','판결','배당','재산명시','강제집행','지급명령','공정증서'],
+    '투자': ['교환사채','주주간','Term Sheet','출자전환','유상증자','정관'],
+    '컴플라이언스': ['금감원','수탁사 점검','보안점검','영상정보'],
+    '합의': ['합의서','분할상환','채무변제','상환약정'],
+  };
+
+  const header = ['번호','출처','날짜','제목','유형','질문수','답변수','첫질문요약(150자)','자동태그'];
+  const rows = [];
+  const tagCounts = {};
+
+  chats.forEach((c, i) => {
+    const qs = c.questions || [];
+    const ans = c.answers || [];
+    const firstQ = (qs[0] || '').substring(0, 150).replace(/[\t\n\r]/g, ' ');
+    const title = (c.title || '').replace(/[\t\n\r]/g, ' ');
+    const searchText = title + ' ' + firstQ + ' ' + (qs.slice(0,3).join(' ')).substring(0, 300);
+
+    const tags = [];
+    for (const [tag, keywords] of Object.entries(kwMap)) {
+      if (keywords.some(kw => searchText.includes(kw))) {
+        tags.push(tag);
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      }
+    }
+
+    rows.push([
+      i + 1,
+      c.source || '',
+      c.date || '',
+      title.substring(0, 80),
+      c.type || '',
+      qs.length,
+      ans.length,
+      firstQ,
+      tags.join(',') || '기타'
+    ].map(v => String(v).replace(/[\t\n\r]/g, ' ')).join('\t'));
+  });
+
+  const tsv = header.join('\t') + '\n' + rows.join('\n');
+
+  // 다운로드
+  const blob = new Blob([tsv], { type: 'text/tab-separated-values;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'gowid_sheets_summary.tsv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // 클립보드에도 복사
+  try { await navigator.clipboard.writeText(tsv); } catch(e) {}
+
+  // 통계
+  const sorted = Object.entries(tagCounts).sort((a,b) => b[1] - a[1]);
+  let report = `✅ 완료! ${chats.length}건 TSV 생성 + 다운로드\n\n`;
+  report += `📊 키워드 분포:\n`;
+  sorted.forEach(([tag, cnt]) => {
+    report += `  ${tag}: ${cnt}건\n`;
+  });
+  report += `\n  기타(미분류): ${chats.filter((c,i) => {
+    const qs = c.questions || [];
+    const title = (c.title || '');
+    const searchText = title + ' ' + (qs[0] || '').substring(0, 150);
+    return !Object.values(kwMap).some(keywords => keywords.some(kw => searchText.includes(kw)));
+  }).length}건`;
+  report += `\n\n📋 Google Sheets에 Ctrl+V로 붙여넣기 가능 (클립보드에도 복사됨)`;
+
+  status.textContent = report;
+});
+</script>
+</body></html>
