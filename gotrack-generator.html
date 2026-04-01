@@ -596,29 +596,14 @@ async function scanAndBuildForm() {
     const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
     const scanRes = await fetch(endpoint + '?action=scan&templateUrl=' + encodeURIComponent(selectedContract.url));
     const rawText = await scanRes.text();
-    // 디버그: 문제 위치 주변 확인
-    let scanData;
-    try {
-      scanData = JSON.parse(rawText);
-    } catch(e1) {
-      // 제어문자 이스케이프 후 재시도
-      const cleaned = rawText.replace(/[\u0000-\u001F\u007F-\u009F]/g, c => {
-        const code = c.charCodeAt(0);
-        if (code === 9) return '\\t';
-        if (code === 10) return '\\n';
-        if (code === 13) return '\\r';
-        return '';
-      });
-      try {
-        scanData = JSON.parse(cleaned);
-      } catch(e2) {
-        // 위치 주변 20자 + charCode 출력
-        const pos = parseInt((e2.message.match(/position (\d+)/) || [])[1]) || 370;
-        const around = cleaned.substring(pos - 10, pos + 10);
-        const codes = [...around].map(c => c.charCodeAt(0));
-        throw new Error(`pos ${pos}: [${codes.join(',')}] "${around}"`);
-      }
+    // 제어문자를 문자 단위로 제거 (JSON.stringify가 이스케이프 못한 문자 처리)
+    let cleaned = '';
+    for (let i = 0; i < rawText.length; i++) {
+      const c = rawText.charCodeAt(i);
+      if (c >= 32 && c !== 127) { cleaned += rawText[i]; }
+      else if (c === 9 || c === 10 || c === 13) { cleaned += ' '; }
     }
+    const scanData = JSON.parse(cleaned);
     if (scanData.error) throw new Error(scanData.error);
 
     templateText = (scanData.text || '') + '\n\n[테이블]\n' + (scanData.tableText || '');
