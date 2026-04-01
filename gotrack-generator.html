@@ -596,7 +596,15 @@ async function scanAndBuildForm() {
     const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
     const scanRes = await fetch(endpoint + '?action=scan&templateUrl=' + encodeURIComponent(selectedContract.url));
     const rawText = await scanRes.text();
-    const cleanedText = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+    // Apps Script JSON 안에 이스케이프되지 않은 제어문자를 모두 처리
+    const cleanedText = rawText.replace(/[\x00-\x1F\x7F]/g, c => {
+      switch(c.charCodeAt(0)) {
+        case 9: return '\\t';
+        case 10: return '\\n';
+        case 13: return '\\r';
+        default: return '';
+      }
+    });
     const scanData = JSON.parse(cleanedText);
     if (scanData.error) throw new Error(scanData.error);
 
