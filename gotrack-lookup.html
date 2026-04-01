@@ -215,19 +215,15 @@ const CATS = [
   { key:'E', label:'엔진 [E]' },
   { key:'S', label:'구독 [S]' },
 ];
+const DEFAULT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyB_MlbkzrA7GR-SQw6QE_7OYzn_NENYtTlAj3-KAHknCDtDn3ojUcPNuxvqCp9fbDyIQ/exec';
 
 // ========== Init ==========
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('scriptCode').textContent = APPS_SCRIPT;
   initTabs();
 
-  const endpoint = localStorage.getItem('gotrack_endpoint');
-  if (endpoint) {
-    fetchData(endpoint);
-  } else {
-    setConn('err', '연동이 설정되지 않았습니다');
-    showSetup();
-  }
+  const endpoint = localStorage.getItem('gotrack_endpoint') || DEFAULT_ENDPOINT;
+  fetchData(endpoint);
 });
 
 // ========== Connection ==========

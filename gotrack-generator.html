@@ -474,6 +474,7 @@ function jsonResponse(data) {
 }`;
 
 // ========== Config ==========
+const DEFAULT_GEN_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyB_MlbkzrA7GR-SQw6QE_7OYzn_NENYtTlAj3-KAHknCDtDn3ojUcPNuxvqCp9fbDyIQ/exec';
 const GEMINI_KEY_DEFAULT = 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak';
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
@@ -488,13 +489,8 @@ let templateText = '';   // 스캔된 템플릿 원문
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('scriptCode').textContent = APPS_SCRIPT;
 
-  const endpoint = localStorage.getItem('gotrack_gen_endpoint');
-  if (endpoint) {
-    fetchContracts(endpoint);
-  } else {
-    setConn('err', '연동이 설정되지 않았습니다');
-    showSetup();
-  }
+  const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT || DEFAULT_GEN_ENDPOINT;
+  fetchContracts(endpoint);
 });
 
 // ========== Connection ==========
@@ -506,7 +502,7 @@ function setConn(state, msg) {
 
 function showSetup() {
   document.getElementById('setupCard').classList.remove('hidden');
-  const existing = localStorage.getItem('gotrack_gen_endpoint');
+  const existing = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
   if (existing) document.getElementById('endpointInput').value = existing;
 }
 
@@ -592,7 +588,7 @@ async function scanAndBuildForm() {
   try {
     // Step A: Apps Script에서 템플릿 텍스트 추출
     document.getElementById('scanStatus').textContent = '문서 텍스트 추출 중...';
-    const endpoint = localStorage.getItem('gotrack_gen_endpoint');
+    const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
     const scanRes = await fetch(endpoint + '?action=scan&templateUrl=' + encodeURIComponent(selectedContract.url));
     const scanData = await scanRes.json();
     if (scanData.error) throw new Error(scanData.error);
@@ -694,7 +690,7 @@ function goStep3() {
 
 // ========== Generate ==========
 async function generate() {
-  const endpoint = localStorage.getItem('gotrack_gen_endpoint');
+  const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
   if (!endpoint) return showError('연동이 설정되지 않았습니다');
 
   // Build replacement map from dynamic fields
