@@ -167,7 +167,7 @@
   </div>
   <div class="step-labels">
     <span class="active" id="slbl1">계약서 선택</span>
-    <span id="slbl2">법인정보 입력</span>
+    <span id="slbl2">공란 채우기</span>
     <span id="slbl3">확인 & 생성</span>
   </div>
 
@@ -211,71 +211,31 @@
     <button class="btn-primary" id="btnStep1" style="margin-top:16px" onclick="goStep2()" disabled>다음: 법인정보 입력</button>
   </div>
 
-  <!-- ===== STEP 2: Company Info Form ===== -->
+  <!-- ===== STEP 2: AI-detected Fields ===== -->
   <div class="card hidden" id="step2Card">
     <div class="selected-contract" id="selectedDisplay"></div>
 
-    <div class="form-section">
-      <div class="form-section-label">계약 기본정보</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>계약 체결일<span class="req">*</span></label>
-          <input type="date" id="fDate">
-        </div>
-        <div class="form-group">
-          <label>계약 시작일</label>
-          <input type="date" id="fStartDate">
-        </div>
-      </div>
-
-      <hr class="form-divider">
-      <div class="form-section-label">계약 상대방 ("을") 정보</div>
-
-      <div class="form-group">
-        <label>법인명 / 상호<span class="req">*</span></label>
-        <input type="text" id="fCompany" placeholder="예: 주식회사 고위드프렌즈">
-      </div>
-      <div class="form-group">
-        <label>대표자명<span class="req">*</span></label>
-        <input type="text" id="fCeo" placeholder="예: 홍길동">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>사업자등록번호<span class="req">*</span></label>
-          <input type="text" id="fBizNo" placeholder="000-00-00000" oninput="formatBizNo(this)">
-        </div>
-        <div class="form-group">
-          <label>법인등록번호</label>
-          <input type="text" id="fCorpNo" placeholder="000000-0000000" oninput="formatCorpNo(this)">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>주소<span class="req">*</span></label>
-        <input type="text" id="fAddress" placeholder="예: 서울특별시 강남구 테헤란로 123, 4층">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>업태</label>
-          <input type="text" id="fBizType" placeholder="예: 서비스업">
-        </div>
-        <div class="form-group">
-          <label>종목</label>
-          <input type="text" id="fBizItem" placeholder="예: 소프트웨어 개발">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>담당자명</label>
-          <input type="text" id="fContact" placeholder="실무 담당자">
-        </div>
-        <div class="form-group">
-          <label>담당자 연락처</label>
-          <input type="text" id="fPhone" placeholder="010-0000-0000">
-        </div>
-      </div>
+    <!-- Scanning state -->
+    <div id="scanningState" class="hidden" style="text-align:center;padding:32px 0">
+      <div class="spinner" style="margin:0 auto 12px"></div>
+      <p style="font-size:14px;color:var(--t60)">템플릿을 분석하고 있습니다</p>
+      <p style="font-size:12px;color:var(--t30);margin-top:4px" id="scanStatus">문서 텍스트 추출 중...</p>
     </div>
 
-    <div class="btn-row">
+    <!-- Dynamic form (built by AI) -->
+    <div id="dynamicForm" class="hidden">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:14px">&#x1F916;</span>
+        <span style="font-size:13px;color:var(--t60)">AI가 감지한 공란 <strong id="fieldCount" style="color:var(--accent)">0</strong>개</span>
+        <button class="btn-secondary" style="flex:none;padding:5px 12px;font-size:11px;margin-left:auto" onclick="rescanTemplate()">다시 스캔</button>
+      </div>
+      <div class="form-section" id="dynamicFields"></div>
+    </div>
+
+    <!-- Scan error -->
+    <div id="scanError" class="hidden"></div>
+
+    <div class="btn-row" id="step2Buttons" class="hidden">
       <button class="btn-secondary" onclick="goStep1()">이전</button>
       <button class="btn-primary" style="flex:2" id="btnStep2" onclick="goStep3()">다음: 확인 & 생성</button>
     </div>
@@ -319,6 +279,7 @@ const APPS_SCRIPT = `function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || "list";
 
   if (action === "list") return listContracts();
+  if (action === "scan") return scanTemplate(e.parameter);
   if (action === "generate") return generateContract(e.parameter);
 
   return jsonResponse({error: "알 수 없는 action"});
@@ -357,6 +318,43 @@ function listContracts() {
   return jsonResponse(result);
 }
 
+function scanTemplate(params) {
+  try {
+    var templateUrl = params.templateUrl;
+    if (!templateUrl) return jsonResponse({error: "템플릿 URL이 없습니다"});
+    var docId = extractDocId(templateUrl);
+    if (!docId) return jsonResponse({error: "유효한 Google Docs URL이 아닙니다"});
+
+    var doc = DocumentApp.openById(docId);
+    var body = doc.getBody();
+    var fullText = body.getText();
+
+    // 테이블 내용도 추출
+    var tables = body.getTables();
+    var tableTexts = [];
+    for (var t = 0; t < tables.length; t++) {
+      var table = tables[t];
+      for (var r = 0; r < table.getNumRows(); r++) {
+        var row = table.getRow(r);
+        var rowTexts = [];
+        for (var c = 0; c < row.getNumCells(); c++) {
+          rowTexts.push(row.getCell(c).getText().trim());
+        }
+        tableTexts.push(rowTexts.join(" | "));
+      }
+    }
+
+    return jsonResponse({
+      success: true,
+      text: fullText,
+      tableText: tableTexts.join("\\n"),
+      title: doc.getName()
+    });
+  } catch(e) {
+    return jsonResponse({error: e.message});
+  }
+}
+
 function generateContract(params) {
   try {
     var templateUrl = params.templateUrl;
@@ -375,9 +373,19 @@ function generateContract(params) {
     var newDoc = DocumentApp.openById(copy.getId());
     var body = newDoc.getBody();
 
-    // 치환 맵
-    var replacements = {
-      "표준": companyName,
+    // 동적 치환 맵 (AI가 감지한 필드)
+    var replacements = {};
+    if (params.replacements) {
+      try {
+        var dynamicMap = JSON.parse(decodeURIComponent(params.replacements));
+        for (var k in dynamicMap) {
+          if (dynamicMap[k]) replacements[k] = dynamicMap[k];
+        }
+      } catch(e) {}
+    }
+
+    // 기존 고정 치환 (폴백)
+    var fixedMap = {
       "{{회사명}}": companyName,
       "{{법인명}}": companyName,
       "{{상호}}": companyName,
@@ -395,6 +403,9 @@ function generateContract(params) {
       "{{시작일}}": params.startDate || "",
       "{{계약시작일}}": params.startDate || "",
     };
+    for (var fk in fixedMap) {
+      if (!replacements[fk] && fixedMap[fk]) replacements[fk] = fixedMap[fk];
+    }
 
     // 본문 치환
     for (var key in replacements) {
@@ -462,15 +473,20 @@ function jsonResponse(data) {
     .setMimeType(ContentService.MimeType.JSON);
 }`;
 
+// ========== Config ==========
+const GEMINI_KEY_DEFAULT = 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak';
+const GEMINI_MODEL = 'gemini-2.5-flash';
+
 // ========== State ==========
 let CONTRACTS = [];
 let selectedContract = null;
 let currentStep = 1;
+let detectedFields = []; // AI가 감지한 공란 목록
+let templateText = '';   // 스캔된 템플릿 원문
 
 // ========== Init ==========
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('scriptCode').textContent = APPS_SCRIPT;
-  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
 
   const endpoint = localStorage.getItem('gotrack_gen_endpoint');
   if (endpoint) {
@@ -543,47 +559,133 @@ function setStep(n) {
 
 function goStep1() { setStep(1); }
 
-function goStep2() {
+async function goStep2() {
   if (!selectedContract) return;
   document.getElementById('selectedDisplay').innerHTML =
     `<span class="sc-code">${esc(selectedContract.current)}</span>
      <span class="sc-name">${esc(selectedContract.title)}</span>
      <span class="sc-change" onclick="goStep1()">변경</span>`;
   setStep(2);
-  document.getElementById('fCompany').focus();
+
+  // 이미 스캔된 결과가 있으면 재사용
+  if (detectedFields.length > 0) {
+    document.getElementById('scanningState').classList.add('hidden');
+    document.getElementById('dynamicForm').classList.remove('hidden');
+    document.getElementById('step2Buttons').classList.remove('hidden');
+    return;
+  }
+
+  await scanAndBuildForm();
+}
+
+async function rescanTemplate() {
+  detectedFields = [];
+  await scanAndBuildForm();
+}
+
+async function scanAndBuildForm() {
+  document.getElementById('scanningState').classList.remove('hidden');
+  document.getElementById('dynamicForm').classList.add('hidden');
+  document.getElementById('step2Buttons').classList.add('hidden');
+  document.getElementById('scanError').classList.add('hidden');
+
+  try {
+    // Step A: Apps Script에서 템플릿 텍스트 추출
+    document.getElementById('scanStatus').textContent = '문서 텍스트 추출 중...';
+    const endpoint = localStorage.getItem('gotrack_gen_endpoint');
+    const scanRes = await fetch(endpoint + '?action=scan&templateUrl=' + encodeURIComponent(selectedContract.url));
+    const scanData = await scanRes.json();
+    if (scanData.error) throw new Error(scanData.error);
+
+    templateText = (scanData.text || '') + '\n\n[테이블]\n' + (scanData.tableText || '');
+
+    // Step B: Gemini로 공란 감지
+    document.getElementById('scanStatus').textContent = 'AI가 공란을 분석 중...';
+    const geminiKey = localStorage.getItem('gowid_gemini_key') || localStorage.getItem('gotrack_gemini_key') || GEMINI_KEY_DEFAULT;
+    const prompt = `아래는 계약서 템플릿의 전문입니다. 이 문서에서 **작성자가 채워야 할 공란**을 모두 찾아주세요.
+
+공란의 유형:
+- 밑줄(_____)로 표시된 빈칸
+- 괄호 안 빈칸: (   ), [   ]
+- ":" 또는 ":" 뒤에 비어있는 곳
+- 명시적 빈칸 없이도, 계약 당사자 정보(법인명, 대표자, 주소, 사업자등록번호 등)처럼 실제 계약 시 채워야 할 항목
+
+JSON 배열로만 출력하세요. 다른 텍스트는 출력하지 마세요.
+각 항목: {"label":"필드명(예: 법인명)", "placeholder":"입력 예시", "context":"문서에서 해당 공란 주변 텍스트(10~30자)", "searchText":"문서에서 치환할 원본 텍스트(밑줄이나 빈칸 포함)", "required":true/false}
+
+중복을 제거하고, 같은 항목이 여러 번 나오면 하나만 반환하세요.
+"갑" 측(고위드) 정보는 이미 채워져 있으므로 제외하세요. "을" 측 정보와 계약 조건만 포함하세요.
+
+===
+${templateText.substring(0, 8000)}
+===`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
+    const geminiRes = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } }
+      })
+    });
+    const geminiData = await geminiRes.json();
+    if (!geminiRes.ok) throw new Error(geminiData?.error?.message || 'Gemini API 오류');
+
+    const allParts = geminiData.candidates?.[0]?.content?.parts || [];
+    const allText = allParts.map(p => p.text || '').join('\n');
+    const codeBlock = allText.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const rawJson = codeBlock ? codeBlock[1] : allText.match(/(\[[\s\S]*\])/)?.[1];
+    if (!rawJson) throw new Error('공란 감지 결과를 파싱할 수 없습니다');
+
+    detectedFields = JSON.parse(rawJson);
+    buildDynamicForm();
+
+  } catch (e) {
+    document.getElementById('scanningState').classList.add('hidden');
+    document.getElementById('scanError').classList.remove('hidden');
+    document.getElementById('scanError').innerHTML = `<div class="error-box">스캔 실패: ${esc(e.message)}<br><button class="btn-secondary" style="margin-top:8px;padding:6px 14px;font-size:12px" onclick="rescanTemplate()">다시 시도</button></div>`;
+  }
+}
+
+function buildDynamicForm() {
+  document.getElementById('scanningState').classList.add('hidden');
+  document.getElementById('dynamicForm').classList.remove('hidden');
+  document.getElementById('step2Buttons').classList.remove('hidden');
+  document.getElementById('fieldCount').textContent = detectedFields.length;
+
+  const $fields = document.getElementById('dynamicFields');
+  $fields.innerHTML = detectedFields.map((f, i) => `
+    <div class="form-group">
+      <label>${esc(f.label)}${f.required ? '<span class="req">*</span>' : ''}</label>
+      ${f.context ? `<div style="font-size:11px;color:var(--t30);margin-bottom:4px;font-style:italic">"${esc(f.context)}"</div>` : ''}
+      <input type="text" id="dynField_${i}" placeholder="${esc(f.placeholder || '')}" data-search="${esc(f.searchText || '')}">
+    </div>
+  `).join('');
 }
 
 function goStep2Back() { setStep(2); }
 
 function goStep3() {
-  // Validation
-  const company = document.getElementById('fCompany').value.trim();
-  const ceo = document.getElementById('fCeo').value.trim();
-  const bizNo = document.getElementById('fBizNo').value.trim();
-  const address = document.getElementById('fAddress').value.trim();
-  const date = document.getElementById('fDate').value;
-
-  if (!company) return showError('법인명/상호를 입력해 주세요');
-  if (!ceo) return showError('대표자명을 입력해 주세요');
-  if (!bizNo) return showError('사업자등록번호를 입력해 주세요');
-  if (!address) return showError('주소를 입력해 주세요');
-  if (!date) return showError('계약 체결일을 입력해 주세요');
+  // Collect dynamic field values
+  const filledFields = [];
+  for (let i = 0; i < detectedFields.length; i++) {
+    const input = document.getElementById('dynField_' + i);
+    const val = input ? input.value.trim() : '';
+    const f = detectedFields[i];
+    if (f.required && !val) {
+      return showError(`"${f.label}" 항목을 입력해 주세요`);
+    }
+    filledFields.push({ ...f, value: val });
+  }
 
   // Build preview
-  const fields = [
+  const previewItems = [
     ['계약서', `${selectedContract.current} — ${selectedContract.title}`],
-    ['계약 체결일', formatDateKR(date)],
-    ['계약 시작일', document.getElementById('fStartDate').value ? formatDateKR(document.getElementById('fStartDate').value) : '—'],
-    ['법인명/상호', company],
-    ['대표자명', ceo],
-    ['사업자등록번호', bizNo],
-    ['법인등록번호', document.getElementById('fCorpNo').value.trim() || '—'],
-    ['주소', address],
-    ['업태/종목', [document.getElementById('fBizType').value.trim(), document.getElementById('fBizItem').value.trim()].filter(Boolean).join(' / ') || '—'],
-    ['담당자', [document.getElementById('fContact').value.trim(), document.getElementById('fPhone').value.trim()].filter(Boolean).join(' · ') || '—'],
+    ...filledFields.filter(f => f.value).map(f => [f.label, f.value])
   ];
 
-  document.getElementById('previewInfo').innerHTML = fields.map(([l, v]) =>
+  document.getElementById('previewInfo').innerHTML = previewItems.map(([l, v]) =>
     `<div class="preview-row"><span class="pr-label">${esc(l)}</span><span class="pr-value">${esc(v)}</span></div>`
   ).join('');
 
@@ -595,21 +697,26 @@ async function generate() {
   const endpoint = localStorage.getItem('gotrack_gen_endpoint');
   if (!endpoint) return showError('연동이 설정되지 않았습니다');
 
+  // Build replacement map from dynamic fields
+  const replacementMap = {};
+  let companyName = '';
+  for (let i = 0; i < detectedFields.length; i++) {
+    const f = detectedFields[i];
+    const input = document.getElementById('dynField_' + i);
+    const val = input ? input.value.trim() : '';
+    if (val && f.searchText) {
+      replacementMap[f.searchText] = val;
+    }
+    // 법인명/상호 감지
+    if (val && /법인명|상호|회사명/.test(f.label)) companyName = val;
+  }
+
   const params = new URLSearchParams({
     action: 'generate',
     templateUrl: selectedContract.url,
     contractCode: selectedContract.current,
-    company: document.getElementById('fCompany').value.trim(),
-    ceo: document.getElementById('fCeo').value.trim(),
-    bizNo: document.getElementById('fBizNo').value.trim(),
-    corpNo: document.getElementById('fCorpNo').value.trim(),
-    address: document.getElementById('fAddress').value.trim(),
-    bizType: document.getElementById('fBizType').value.trim(),
-    bizItem: document.getElementById('fBizItem').value.trim(),
-    contact: document.getElementById('fContact').value.trim(),
-    phone: document.getElementById('fPhone').value.trim(),
-    contractDate: formatDateKR(document.getElementById('fDate').value),
-    startDate: document.getElementById('fStartDate').value ? formatDateKR(document.getElementById('fStartDate').value) : '',
+    company: companyName || '표준',
+    replacements: encodeURIComponent(JSON.stringify(replacementMap)),
   });
 
   showLoading(true);
@@ -728,20 +835,14 @@ function copyScript(btn) {
 
 function resetAll() {
   selectedContract = null;
+  detectedFields = [];
+  templateText = '';
   document.querySelectorAll('.cl-item').forEach(el => el.classList.remove('selected'));
   document.getElementById('btnStep1').disabled = true;
   document.getElementById('contractSearch').value = '';
-  document.getElementById('fCompany').value = '';
-  document.getElementById('fCeo').value = '';
-  document.getElementById('fBizNo').value = '';
-  document.getElementById('fCorpNo').value = '';
-  document.getElementById('fAddress').value = '';
-  document.getElementById('fBizType').value = '';
-  document.getElementById('fBizItem').value = '';
-  document.getElementById('fContact').value = '';
-  document.getElementById('fPhone').value = '';
-  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('fStartDate').value = '';
+  document.getElementById('dynamicFields').innerHTML = '';
+  document.getElementById('dynamicForm').classList.add('hidden');
+  document.getElementById('scanError').classList.add('hidden');
   document.getElementById('resultArea').classList.add('hidden');
   document.getElementById('errorArea').innerHTML = '';
   filterContracts();
