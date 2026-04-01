@@ -465,7 +465,7 @@ function refreshDashboard() {
     { name: 'Slack User ID', key: 'gowid_slack_user_id', fallback: 'U080B5UD7RA' },
     { name: 'GoTrack 조회 Endpoint', key: 'gotrack_endpoint', fallback: 'https://script.google.com/macros/s/AKfycbyB_MlbkzrA7GR-SQw6QE_7OYzn_NENYtTlAj3-KAHknCDtDn3ojUcPNuxvqCp9fbDyIQ/exec' },
     { name: 'GoTrack 생성 Endpoint', key: 'gotrack_gen_endpoint', fallback: 'https://script.google.com/macros/s/AKfycbyB_MlbkzrA7GR-SQw6QE_7OYzn_NENYtTlAj3-KAHknCDtDn3ojUcPNuxvqCp9fbDyIQ/exec' },
-    { name: 'GoTrack Gemini Key', key: 'gotrack_gemini_key', fallback: null },
+    { name: 'GoTrack Gemini Key', key: 'gotrack_gemini_key', fallback: localStorage.getItem('gowid_gemini_key') || 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak' },
   ];
 
   const $health = document.getElementById('healthList');
