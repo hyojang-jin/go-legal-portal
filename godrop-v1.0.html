@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GoDrop v1.0 — 서류 보관소</title>
 <style>
-  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#22223a;--accent:#e8a04c;--accent-dim:rgba(232,160,76,.15);--accent-glow:rgba(232,160,76,.25);--red:#ff6b6b;--green:#69db7c;--green-bg:rgba(105,219,124,.10);--blue:#74c0fc;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
+  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#22223a;--accent:#e8a04c;--accent-dim:rgba(232,160,76,.15);--red:#ff6b6b;--green:#69db7c;--green-bg:rgba(105,219,124,.10);--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
   .wrap{max-width:720px;margin:0 auto;padding:20px}
@@ -25,12 +25,6 @@
   header .ver{font-size:12px;color:var(--accent);font-weight:600;margin-left:6px;vertical-align:super}
   header p{font-size:14px;color:var(--t60);margin-top:6px}
   header .sub{font-size:12px;color:var(--t30);margin-top:6px;line-height:1.7}
-
-  /* Source Badge */
-  .source-badges{display:flex;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap}
-  .src-badge{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 14px;border-radius:20px;font-weight:600;border:1px solid}
-  .src-badge.gemini{background:rgba(232,160,76,.08);border-color:rgba(232,160,76,.2);color:var(--accent)}
-  .src-badge.gemini .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px rgba(232,160,76,.5)}
 
   /* Drop Zone — Book Return Box Style */
   .drop-zone-wrap{margin-top:24px}
@@ -88,41 +82,6 @@
   .btn-drop:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
   .btn-drop .btn-icon{font-size:18px}
 
-  /* Analyzing State */
-  .analyzing-section{margin-top:20px;display:none}
-  .analyzing-section.visible{display:block}
-  .analyzing-card{background:var(--card);border:1px solid var(--accent);border-radius:var(--r);padding:24px;text-align:center}
-  .analyzing-card .an-spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--t15);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .analyzing-card .an-title{font-size:15px;font-weight:600;color:var(--t80);margin-bottom:4px}
-  .analyzing-card .an-sub{font-size:12px;color:var(--t30)}
-  .analyzing-card .an-file{font-size:12px;color:var(--accent);margin-top:8px;font-weight:500}
-
-  /* Classification Result */
-  .result-section{margin-top:20px;display:none}
-  .result-section.visible{display:block}
-  .result-card{background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:20px;margin-bottom:10px}
-  .result-card .rc-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-  .result-card .rc-icon{font-size:20px}
-  .result-card .rc-filename{font-size:14px;font-weight:600;color:var(--t80);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .result-card .rc-status{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600}
-  .result-card .rc-status.ok{background:var(--green-bg);color:var(--green)}
-  .result-card .rc-status.fail{background:rgba(255,107,107,.1);color:var(--red)}
-  .rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .rc-field{padding:10px 12px;background:var(--t08);border-radius:8px;border:1px solid var(--t08)}
-  .rc-field.full{grid-column:1/-1}
-  .rc-label{font-size:10px;font-weight:600;color:var(--t30);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-  .rc-value{font-size:13px;font-weight:600;color:var(--t80)}
-  .rc-value.accent{color:var(--accent)}
-
-  /* Confirm Button */
-  .confirm-row{margin-top:16px;display:flex;gap:10px}
-  .btn-confirm{flex:1;padding:13px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#0f0f14}
-  .btn-confirm:hover{box-shadow:0 4px 20px rgba(105,219,124,.3);transform:translateY(-1px)}
-  .btn-confirm:active{transform:translateY(0)}
-  .btn-retry{padding:13px 20px;border:1px solid var(--t15);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;background:transparent;color:var(--t60)}
-  .btn-retry:hover{border-color:var(--t30);color:var(--t80);background:var(--t08)}
-
   /* Success Animation */
   .success-overlay{position:fixed;inset:0;background:rgba(15,15,20,.92);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
   .success-overlay.show{opacity:1;pointer-events:auto}
@@ -131,7 +90,7 @@
   .success-icon{font-size:72px;margin-bottom:16px;animation:dropIn .5s ease}
   .success-title{font-size:22px;font-weight:700;color:var(--t50);margin-bottom:6px}
   .success-sub{font-size:14px;color:var(--t60);margin-bottom:8px;line-height:1.6}
-  .success-detail{font-size:12px;color:var(--t30);margin-bottom:16px;line-height:1.6}
+  .success-detail{font-size:13px;color:var(--t30);margin-bottom:16px;line-height:1.8}
   .success-id{font-size:12px;color:var(--accent);background:var(--accent-dim);padding:6px 16px;border-radius:8px;display:inline-block;font-weight:600;font-family:'SF Mono',Consolas,monospace;letter-spacing:.5px}
   @keyframes dropIn{0%{transform:translateY(-30px) scale(1.3);opacity:0}60%{transform:translateY(5px) scale(.95)}100%{transform:translateY(0) scale(1);opacity:1}}
 
@@ -147,13 +106,11 @@
     .box-label-sub{font-size:12px}
     .box-slot-area{margin:16px 24px 0}
     .box-slot-hint{font-size:12px}
-    .rc-grid{grid-template-columns:1fr}
   }
 </style>
 </head>
 <body>
 
-<!-- Top Nav -->
 <nav class="top-nav">
   <a href="index.html" class="nav-home">&#x2190; Go Legal Portal</a>
   <div class="nav-title" onclick="location.reload()">GoDrop<span class="nav-ver">v1.0</span></div>
@@ -161,7 +118,6 @@
 
 <div class="wrap">
 
-<!-- Header -->
 <header>
   <h1><span>Go</span>Drop<sup class="ver">v1.0</sup></h1>
   <p>서류 보관소</p>
@@ -169,12 +125,9 @@
     계약서, 공문, 전자서명본, 스캔본 &mdash; 파일만 던져 넣으면 자동으로 아카이빙됩니다.<br>
     도서관 무인 반납함처럼, 넣기만 하면 끝.
   </div>
-  <div class="source-badges">
-    <div class="src-badge gemini"><span class="dot"></span>Gemini 2.5 Flash &mdash; 자동 분류</div>
-  </div>
 </header>
 
-<!-- Drop Zone — Book Return Box -->
+<!-- Drop Zone -->
 <div class="drop-zone-wrap">
   <div class="drop-zone" id="dropZone">
     <div class="box-window"><span class="box-window-text">GoDrop</span></div>
@@ -207,35 +160,15 @@
 </div>
 
 <!-- Submit -->
-<div class="submit-row" id="submitRow">
+<div class="submit-row">
   <button class="btn-drop" id="btnDrop" disabled>
     <span class="btn-icon">&#x1F4E5;</span>
     투입하기
   </button>
 </div>
 
-<!-- Analyzing -->
-<div class="analyzing-section" id="analyzingSection">
-  <div class="analyzing-card">
-    <div class="an-spinner"></div>
-    <div class="an-title">서류를 분석하고 있습니다</div>
-    <div class="an-sub">AI가 서류 유형, 부서, 상대방을 자동으로 파악합니다</div>
-    <div class="an-file" id="analyzingFile"></div>
-  </div>
 </div>
 
-<!-- Classification Results -->
-<div class="result-section" id="resultSection">
-  <div id="resultList"></div>
-  <div class="confirm-row">
-    <button class="btn-retry" id="btnRetry">&#x21BB; 다시 분석</button>
-    <button class="btn-confirm" id="btnConfirm">&#x2714; 보관 확정</button>
-  </div>
-</div>
-
-</div>
-
-<!-- Footer -->
 <div class="footer">
   GoDrop v1.0 &middot; 서류 보관소<br>
   Go Legal Portal &middot; Gowid Legal Tech &middot; 2026
@@ -253,13 +186,37 @@
 </div>
 
 <script>
-/* ── Config ── */
-const DEFAULT_KEY = 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+/* ── IndexedDB ── */
+const DB_NAME = 'godrop_db';
+const DB_VERSION = 1;
+const STORE_NAME = 'files';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveFileToDB(entry) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(entry);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
 
 /* ── State ── */
 let queuedFiles = [];
-let classifiedResults = [];
 
 const $drop = document.getElementById('dropZone');
 const $fileInput = document.getElementById('fileInput');
@@ -268,17 +225,13 @@ const $qList = document.getElementById('queuedList');
 const $qCount = document.getElementById('queueCount');
 const $qClear = document.getElementById('queueClear');
 const $btn = document.getElementById('btnDrop');
-const $submitRow = document.getElementById('submitRow');
-const $analyzing = document.getElementById('analyzingSection');
-const $resultSection = document.getElementById('resultSection');
-const $resultList = document.getElementById('resultList');
 const $overlay = document.getElementById('successOverlay');
 const $successId = document.getElementById('successId');
 const $successDetail = document.getElementById('successDetail');
 
 /* ── Drop Zone ── */
 $drop.addEventListener('click', () => $fileInput.click());
-$fileInput.addEventListener('change', e => { addFiles(e.target.files); });
+$fileInput.addEventListener('change', e => addFiles(e.target.files));
 
 ['dragenter','dragover'].forEach(ev => {
   $drop.addEventListener(ev, e => { e.preventDefault(); $drop.classList.add('drag-over'); });
@@ -297,18 +250,12 @@ function addFiles(fileList) {
       queuedFiles.push(f);
     }
   }
-  // Reset to upload state
-  $resultSection.classList.remove('visible');
-  classifiedResults = [];
   renderQueue();
-  checkReady();
+  $btn.disabled = queuedFiles.length === 0;
 }
 
 function renderQueue() {
-  if (queuedFiles.length === 0) {
-    $qSection.classList.remove('visible');
-    return;
-  }
+  if (queuedFiles.length === 0) { $qSection.classList.remove('visible'); return; }
   $qSection.classList.add('visible');
   $qCount.textContent = queuedFiles.length;
   $qList.innerHTML = queuedFiles.map((f, i) => `
@@ -323,227 +270,68 @@ function renderQueue() {
   `).join('');
 }
 
-function removeFile(i) {
+window.removeFile = function(i) {
   queuedFiles.splice(i, 1);
   renderQueue();
-  checkReady();
-}
+  $btn.disabled = queuedFiles.length === 0;
+};
 
 $qClear.addEventListener('click', () => {
   queuedFiles = [];
   $fileInput.value = '';
   renderQueue();
-  checkReady();
+  $btn.disabled = true;
 });
 
-function checkReady() {
-  $btn.disabled = queuedFiles.length === 0;
-}
-
-/* ── Submit: Analyze Files ── */
+/* ── Submit ── */
 $btn.addEventListener('click', async () => {
   if ($btn.disabled) return;
-  await analyzeAll();
-});
+  $btn.disabled = true;
+  $btn.textContent = '보관 중...';
 
-document.getElementById('btnRetry').addEventListener('click', async () => {
-  await analyzeAll();
-});
-
-async function analyzeAll() {
-  $submitRow.style.display = 'none';
-  $resultSection.classList.remove('visible');
-  $analyzing.classList.add('visible');
-  classifiedResults = [];
-
-  for (let i = 0; i < queuedFiles.length; i++) {
-    const f = queuedFiles[i];
-    document.getElementById('analyzingFile').textContent = `(${i+1}/${queuedFiles.length}) ${f.name}`;
-    try {
-      const result = await classifyFile(f);
-      classifiedResults.push({ file: f, ...result, success: true });
-    } catch (err) {
-      classifiedResults.push({ file: f, success: false, error: err.message });
-    }
-  }
-
-  $analyzing.classList.remove('visible');
-  renderResults();
-  $resultSection.classList.add('visible');
-}
-
-/* ── Gemini Classification ── */
-async function classifyFile(file) {
-  const base64 = await fileToBase64(file);
-  const ext = file.name.split('.').pop().toLowerCase();
-  const mimeType = getMimeType(ext);
-  const isImage = ['jpg','jpeg','png','tif','tiff'].includes(ext);
-  const isPdf = ext === 'pdf';
-
-  const prompt = `당신은 법무팀 서류 분류 전문가입니다. 이 문서를 분석하여 아래 JSON 형식으로 분류 결과를 반환하세요.
-
-반드시 아래 JSON만 출력하세요. 다른 텍스트는 출력하지 마세요.
-
-{
-  "docType": "문서 유형 (다음 중 하나: 계약서, 공문, 내용증명, 인감증명서, 사업자등록증, 등기부등본, 위임장, 각서/확인서, NDA, MOU/LOI, 견적서, 세금계산서, 회의록, 기타)",
-  "signType": "서명 유형 (다음 중 하나: 전자서명본, 날인본(스캔), 사본, 원본(미서명), 판별불가)",
-  "department": "관련 부서 추정 (다음 중 하나: 경영지원, 재무, 인사, 영업, 마케팅, 개발, 제품, 디자인, CS, 법무, 기타)",
-  "counterparty": "상대방 회사 또는 개인명 (없으면 빈 문자열)",
-  "title": "문서 제목 또는 요약 (20자 이내)",
-  "summary": "문서 핵심 내용 요약 (30자 이내)"
-}`;
-
-  const parts = [{ text: prompt }];
-
-  if (isImage || isPdf) {
-    parts.push({
-      inlineData: { mimeType, data: base64 }
-    });
-  } else {
-    parts.push({
-      text: `\n\n[파일명: ${file.name}, 크기: ${formatSize(file.size)}]\n파일 형식이 직접 분석 불가하므로 파일명과 확장자를 기반으로 최선의 추정을 해주세요.`
-    });
-  }
-
-  const key = localStorage.getItem('gowid_gemini_key') || DEFAULT_KEY;
-  if (!key) throw new Error('API 키가 설정되지 않았습니다.');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 512 }
-    })
-  });
-
-  const data = await resp.json();
-  if (!resp.ok) {
-    const msg = data?.error?.message || `HTTP ${resp.status}`;
-    throw new Error(msg);
-  }
-  // Collect text from all parts (Gemini 2.5 Flash may include thinking parts)
-  const allParts = data.candidates?.[0]?.content?.parts || [];
-  const allText = allParts.map(p => p.text || '').join('\n');
-  const jsonMatch = allText.match(/```(?:json)?\s*([\s\S]*?)```/) || allText.match(/(\{[\s\S]*\})/);
-  if (!jsonMatch) throw new Error('파싱 실패: ' + allText.substring(0, 200));
-  return JSON.parse(jsonMatch[1]);
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function getMimeType(ext) {
-  const map = {
-    pdf:'application/pdf', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png',
-    tif:'image/tiff', tiff:'image/tiff', doc:'application/msword',
-    docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    xls:'application/vnd.ms-excel', xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    hwp:'application/x-hwp', hwpx:'application/x-hwpx'
-  };
-  return map[ext] || 'application/octet-stream';
-}
-
-/* ── Render Results ── */
-function renderResults() {
-  $resultList.innerHTML = classifiedResults.map((r, i) => {
-    if (!r.success) {
-      return `
-        <div class="result-card">
-          <div class="rc-header">
-            <span class="rc-icon">${fileIcon(r.file.name)}</span>
-            <span class="rc-filename">${esc(r.file.name)}</span>
-            <span class="rc-status fail">분석 실패</span>
-          </div>
-          <div class="rc-grid">
-            <div class="rc-field full">
-              <div class="rc-label">오류</div>
-              <div class="rc-value" style="color:var(--red);font-size:12px">${esc(r.error)}</div>
-            </div>
-          </div>
-        </div>`;
-    }
-    return `
-      <div class="result-card">
-        <div class="rc-header">
-          <span class="rc-icon">${fileIcon(r.file.name)}</span>
-          <span class="rc-filename">${esc(r.file.name)}</span>
-          <span class="rc-status ok">분류 완료</span>
-        </div>
-        <div class="rc-grid">
-          <div class="rc-field">
-            <div class="rc-label">문서 유형</div>
-            <div class="rc-value accent">${esc(r.docType || '-')}</div>
-          </div>
-          <div class="rc-field">
-            <div class="rc-label">서명 유형</div>
-            <div class="rc-value">${esc(r.signType || '-')}</div>
-          </div>
-          <div class="rc-field">
-            <div class="rc-label">관련 부서</div>
-            <div class="rc-value">${esc(r.department || '-')}</div>
-          </div>
-          <div class="rc-field">
-            <div class="rc-label">상대방</div>
-            <div class="rc-value">${esc(r.counterparty || '-')}</div>
-          </div>
-          <div class="rc-field full">
-            <div class="rc-label">문서 요약</div>
-            <div class="rc-value">${esc(r.title || '')}${r.summary ? ' — ' + esc(r.summary) : ''}</div>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-/* ── Confirm: Save to Archive ── */
-document.getElementById('btnConfirm').addEventListener('click', () => {
-  const successItems = classifiedResults.filter(r => r.success);
-  if (successItems.length === 0) return alert('보관할 수 있는 분류 결과가 없습니다.');
-
-  const archive = JSON.parse(localStorage.getItem('godrop_archive') || '[]');
   const now = new Date();
   const ids = [];
 
-  for (const r of successItems) {
+  for (const f of queuedFiles) {
     const id = generateId();
     ids.push(id);
-    archive.unshift({
+    const buf = await f.arrayBuffer();
+    await saveFileToDB({
       id,
-      docType: r.docType || '기타',
-      signType: r.signType || '판별불가',
-      department: r.department || '기타',
-      counterparty: r.counterparty || '',
-      title: r.title || '',
-      summary: r.summary || '',
-      files: [{ name: r.file.name, size: r.file.size }],
+      name: f.name,
+      size: f.size,
+      type: f.type || getMimeType(f.name.split('.').pop().toLowerCase()),
+      data: buf,
       timestamp: now.toISOString(),
       dateStr: formatDate(now)
     });
   }
 
+  // Update archive index in localStorage
+  const archive = JSON.parse(localStorage.getItem('godrop_archive') || '[]');
+  for (let i = 0; i < queuedFiles.length; i++) {
+    archive.unshift({
+      id: ids[i],
+      name: queuedFiles[i].name,
+      size: queuedFiles[i].size,
+      timestamp: now.toISOString(),
+      dateStr: formatDate(now)
+    });
+  }
   localStorage.setItem('godrop_archive', JSON.stringify(archive));
 
-  // Show success
-  $successDetail.textContent = `${successItems.length}건 보관 완료`;
+  // Success
+  $successDetail.textContent = queuedFiles.map(f => f.name).join(', ');
   $successId.textContent = ids.length === 1 ? ids[0] : `${ids[0]} 외 ${ids.length - 1}건`;
   $overlay.classList.add('show');
   setTimeout(() => $overlay.classList.remove('show'), 2500);
 
-  // Reset everything
+  // Reset
   queuedFiles = [];
-  classifiedResults = [];
   $fileInput.value = '';
   renderQueue();
-  checkReady();
-  $resultSection.classList.remove('visible');
-  $submitRow.style.display = '';
+  $btn.disabled = true;
+  $btn.innerHTML = '<span class="btn-icon">&#x1F4E5;</span> 투입하기';
 });
 
 $overlay.addEventListener('click', () => $overlay.classList.remove('show'));
@@ -551,33 +339,28 @@ $overlay.addEventListener('click', () => $overlay.classList.remove('show'));
 /* ── Helpers ── */
 function generateId() {
   const d = new Date();
-  const prefix = 'GD';
   const date = d.getFullYear().toString().slice(2) + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
   const seq = String(Math.floor(Math.random()*9000)+1000);
-  return `${prefix}-${date}-${seq}`;
+  return `GD-${date}-${seq}`;
 }
-
 function formatDate(d) {
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-
 function formatSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
   return (bytes/1048576).toFixed(1) + ' MB';
 }
-
 function fileIcon(name) {
   const ext = name.split('.').pop().toLowerCase();
   const map = {pdf:'&#x1F4D5;',doc:'&#x1F4D8;',docx:'&#x1F4D8;',xls:'&#x1F4D7;',xlsx:'&#x1F4D7;',hwp:'&#x1F4D9;',hwpx:'&#x1F4D9;',jpg:'&#x1F5BC;',jpeg:'&#x1F5BC;',png:'&#x1F5BC;',tif:'&#x1F5BC;',tiff:'&#x1F5BC;'};
   return map[ext] || '&#x1F4C4;';
 }
-
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+function getMimeType(ext) {
+  const map = {pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',tif:'image/tiff',tiff:'image/tiff',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',hwp:'application/x-hwp',hwpx:'application/x-hwpx'};
+  return map[ext] || 'application/octet-stream';
 }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 </script>
 <script src="auth-gate.js"></script>
 </body>
