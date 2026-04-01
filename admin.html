@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Go Legal Portal — Admin Tools</title>
+<title>Go Legal Portal — Admin</title>
 <style>
-  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#1e1e30;--purple:#7c8cf0;--green:#6ec8a0;--red:#ff6b6b;--yellow:#ffd43b;--blue:#74c0fc;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:16px}
+  :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#22223a;--accent:#ff6b6b;--accent-dim:rgba(255,107,107,.10);--green:#6ec8a0;--green-dim:rgba(110,200,160,.12);--blue:#74c0fc;--blue-dim:rgba(116,192,252,.1);--orange:#e8a04c;--orange-dim:rgba(232,160,76,.12);--purple:#7c8cf0;--purple-dim:rgba(124,140,240,.12);--yellow:#ffd43b;--red:#ff6b6b;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
 
@@ -13,45 +13,131 @@
   .top-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(15,15,20,.95);border-bottom:1px solid var(--t08);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
   .top-nav .nav-home{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t60);text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent}
   .top-nav .nav-home:hover{color:var(--t50);background:var(--t08);border-color:var(--t15)}
-  .top-nav .nav-title{font-size:13px;color:var(--t80);font-weight:600;padding:6px 12px}
+  .top-nav .nav-right{display:flex;align-items:center;gap:8px}
+  .top-nav .nav-badge{font-size:10px;padding:3px 10px;border-radius:12px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);color:var(--red);font-weight:600;display:flex;align-items:center;gap:5px}
+  .top-nav .nav-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--red);box-shadow:0 0 6px rgba(255,107,107,.5)}
 
-  /* Hero */
-  .hero{text-align:center;padding:48px 20px 32px}
-  .hero .logo{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+  /* Header */
+  .hero{text-align:center;padding:32px 20px 24px;border-bottom:1px solid var(--t08)}
+  .hero .logo{font-size:28px;font-weight:800;letter-spacing:-1px}
   .hero .logo .go{color:var(--green)}
   .hero .logo .admin{color:var(--t30);font-weight:400;font-size:22px;margin-left:4px}
-  .hero .tagline{font-size:14px;color:var(--t60);margin-bottom:6px}
-  .hero .sub{font-size:12px;color:var(--t30);max-width:480px;margin:0 auto;line-height:1.8}
-  .hero .admin-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 12px;border-radius:16px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);color:var(--red);font-weight:600;margin-bottom:12px}
-  .hero .admin-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 6px rgba(255,107,107,.5)}
+  .hero .tagline{font-size:13px;color:var(--t60);margin-top:4px}
 
-  /* Grid */
-  .wrap{max-width:840px;margin:0 auto;padding:0 20px 40px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  /* Tabs */
+  .tab-bar{display:flex;gap:0;padding:0 20px;background:rgba(15,15,20,.6);border-bottom:1px solid var(--t08);overflow-x:auto}
+  .tab-btn{padding:14px 20px;font-size:13px;font-weight:600;color:var(--t30);cursor:pointer;border:none;background:none;font-family:inherit;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+  .tab-btn:hover{color:var(--t60)}
+  .tab-btn.active{color:var(--t50);border-bottom-color:var(--red)}
+  .tab-btn .tab-icon{font-size:14px}
+  .tab-btn .tab-count{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--t08);color:var(--t30);font-weight:700}
+  .tab-btn.active .tab-count{background:var(--accent-dim);color:var(--red)}
 
-  /* Tool Card */
-  .tool-card{background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:28px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;text-decoration:none;display:block}
-  .tool-card:hover{border-color:var(--t30);background:var(--card-hover);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
-  .tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+  /* Content */
+  .wrap{max-width:900px;margin:0 auto;padding:24px 20px 40px}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
 
-  .tc-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-  .tc-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-  .tc-title{font-size:17px;font-weight:700;color:var(--t50);line-height:1.3}
-  .tc-title .tc-ver{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
-  .tc-desc{font-size:13px;color:var(--t60);line-height:1.7;margin-bottom:16px;min-height:62px}
-  .tc-features{display:flex;flex-wrap:wrap;gap:6px}
-  .tc-feat{font-size:10px;padding:3px 10px;border-radius:12px;font-weight:500;border:1px solid var(--t08);color:var(--t30);background:var(--t08)}
-  .tc-arrow{position:absolute;bottom:20px;right:20px;font-size:18px;color:var(--t15);transition:all .25s}
-  .tool-card:hover .tc-arrow{color:var(--t60);transform:translateX(4px)}
+  /* ─── Dashboard ─── */
+  .dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .dash-card{background:var(--card);border:1px solid var(--t15);border-radius:10px;padding:18px;text-align:center}
+  .dash-num{font-size:28px;font-weight:800}
+  .dash-num.green{color:var(--green)}
+  .dash-num.orange{color:var(--orange)}
+  .dash-num.blue{color:var(--blue)}
+  .dash-num.red{color:var(--red)}
+  .dash-label{font-size:11px;color:var(--t30);font-weight:500;margin-top:2px}
+
+  .health-section{margin-top:20px}
+  .health-title{font-size:14px;font-weight:700;color:var(--t80);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .health-list{display:flex;flex-direction:column;gap:8px}
+  .health-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--t08);border-radius:10px}
+  .health-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .health-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(110,200,160,.5)}
+  .health-dot.warn{background:var(--orange);box-shadow:0 0 6px rgba(232,160,76,.5)}
+  .health-dot.err{background:var(--red);box-shadow:0 0 6px rgba(255,107,107,.5)}
+  .health-name{font-size:13px;font-weight:600;color:var(--t80);flex:1}
+  .health-val{font-size:11px;color:var(--t30);font-family:'SF Mono',Consolas,monospace;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ─── Settings ─── */
+  .settings-group{margin-bottom:28px}
+  .sg-title{font-size:14px;font-weight:700;color:var(--t80);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--t08);display:flex;align-items:center;gap:8px}
+  .sg-title .sg-icon{font-size:16px}
+  .setting-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border:1px solid var(--t08);border-radius:10px;margin-bottom:8px}
+  .setting-row:hover{border-color:var(--t15)}
+  .sr-info{flex:1;min-width:0}
+  .sr-label{font-size:13px;font-weight:600;color:var(--t80);margin-bottom:2px}
+  .sr-desc{font-size:11px;color:var(--t30)}
+  .sr-input-wrap{display:flex;gap:8px;align-items:center;flex-shrink:0;max-width:380px;width:100%}
+  input.sr-input{flex:1;padding:8px 12px;border:1px solid var(--t15);border-radius:8px;font-size:12px;font-family:'SF Mono',Consolas,monospace;background:var(--t08);color:var(--t50);transition:border-color .2s;min-width:0}
+  input.sr-input:focus{outline:none;border-color:var(--green)}
+  input.sr-input::placeholder{color:var(--t30);font-family:'Pretendard',sans-serif}
+  .sr-btn{padding:8px 14px;border:1px solid var(--t15);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;background:transparent;color:var(--t60);white-space:nowrap}
+  .sr-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+  .sr-btn.saved{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+  .sr-status{font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600;flex-shrink:0}
+  .sr-status.set{background:var(--green-dim);color:var(--green)}
+  .sr-status.empty{background:var(--t08);color:var(--t30)}
+
+  /* ─── GoDrop Archive ─── */
+  .archive-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .archive-toolbar .search-box{flex:1;min-width:180px;padding:9px 14px;border:1px solid var(--t15);border-radius:8px;font-size:13px;font-family:inherit;background:var(--t08);color:var(--t50);transition:border-color .2s}
+  .archive-toolbar .search-box:focus{outline:none;border-color:var(--orange)}
+  .archive-toolbar .search-box::placeholder{color:var(--t30)}
+  .btn-t{padding:8px 14px;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer;font-weight:600;transition:all .15s;border:1px solid}
+  .btn-t.export{border-color:rgba(232,160,76,.2);background:transparent;color:var(--orange)}
+  .btn-t.export:hover{background:var(--orange-dim)}
+  .btn-t.danger{border-color:rgba(255,107,107,.2);background:transparent;color:var(--red)}
+  .btn-t.danger:hover{background:var(--accent-dim)}
+
+  .archive-list{display:flex;flex-direction:column;gap:6px}
+  .archive-empty{text-align:center;padding:40px;color:var(--t30);font-size:13px}
+  .archive-empty .ae-icon{font-size:36px;margin-bottom:8px;opacity:.4}
+  .archive-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--t08);border-radius:10px;transition:all .2s}
+  .archive-item:hover{border-color:var(--t15);background:var(--card-hover)}
+  .ar-icon{font-size:20px;flex-shrink:0}
+  .ar-body{flex:1;min-width:0}
+  .ar-name{font-size:13px;font-weight:600;color:var(--t80);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ar-meta{font-size:11px;color:var(--t30);display:flex;gap:10px;align-items:center;margin-top:1px}
+  .ar-meta .ar-id{font-family:'SF Mono',Consolas,monospace;opacity:.7}
+  .ar-actions{display:flex;gap:5px;flex-shrink:0}
+  .ar-btn{font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:600;transition:all .15s;border:1px solid;font-family:inherit;background:transparent}
+  .ar-btn.open{border-color:rgba(232,160,76,.2);color:var(--orange)}
+  .ar-btn.open:hover{background:var(--orange-dim)}
+  .ar-btn.dl{border-color:var(--t15);color:var(--t60)}
+  .ar-btn.dl:hover{background:var(--t08);color:var(--t80)}
+  .ar-btn.del{border-color:rgba(255,107,107,.15);color:var(--t30)}
+  .ar-btn.del:hover{color:var(--red);background:var(--accent-dim)}
+
+  /* ─── Tools ─── */
+  .tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .tool-link{background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:24px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;text-decoration:none;display:block}
+  .tool-link:hover{border-color:var(--t30);background:var(--card-hover);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+  .tool-link::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+  .tl-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .tl-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .tl-title{font-size:15px;font-weight:700;color:var(--t50)}
+  .tl-title .tl-ver{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px}
+  .tl-desc{font-size:12px;color:var(--t60);line-height:1.6;margin-bottom:12px}
+  .tl-feats{display:flex;flex-wrap:wrap;gap:5px}
+  .tl-feat{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;border:1px solid}
+  .tl-arrow{position:absolute;bottom:16px;right:16px;font-size:16px;color:var(--t15);transition:all .25s}
+  .tool-link:hover .tl-arrow{color:var(--t60);transform:translateX(4px)}
 
   /* Footer */
   .footer{text-align:center;padding:24px 20px;font-size:11px;color:var(--t30);border-top:1px solid var(--t08);margin-top:32px;line-height:1.8}
 
   @media(max-width:640px){
-    .hero{padding:32px 16px 20px}
-    .grid{grid-template-columns:1fr;gap:12px}
-    .wrap{padding:0 12px 24px}
-    .tc-desc{min-height:auto}
+    .hero{padding:20px 16px 16px}
+    .hero .logo{font-size:24px}
+    .dash-grid{grid-template-columns:1fr 1fr;gap:8px}
+    .dash-card{padding:14px}
+    .dash-num{font-size:22px}
+    .setting-row{flex-direction:column;align-items:stretch}
+    .sr-input-wrap{max-width:100%}
+    .tool-grid{grid-template-columns:1fr}
+    .tab-btn{padding:12px 14px;font-size:12px}
+    .ar-btn.dl{display:none}
   }
 </style>
 </head>
@@ -59,84 +145,492 @@
 
 <nav class="top-nav">
   <a class="nav-home" href="index.html">&#x2190; Go Legal Portal</a>
-  <span class="nav-title">Admin Tools</span>
+  <div class="nav-right">
+    <span class="nav-badge"><span class="dot"></span>Admin</span>
+  </div>
 </nav>
 
 <div class="hero">
-  <div class="admin-badge"><span class="dot"></span>관리자 전용</div>
   <div class="logo">
     <span class="go">Go</span><span style="color:var(--t50)"> Legal</span><span class="admin"> Admin</span>
   </div>
-  <p class="tagline">선례 DB 구축 및 데이터 관리 도구</p>
-  <p class="sub">엘박스·슈퍼로이어 데이터를 추출하고, 필터링하여 Gommon Sense 선례 DB를 구축하는 관리자 도구입니다.</p>
+  <p class="tagline">포탈 관리 &middot; 설정 &middot; 데이터 도구</p>
+</div>
+
+<!-- Tabs -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="dashboard"><span class="tab-icon">&#x1F4CA;</span>대시보드</button>
+  <button class="tab-btn" data-tab="settings"><span class="tab-icon">&#x2699;</span>설정</button>
+  <button class="tab-btn" data-tab="archive"><span class="tab-icon">&#x1F5C4;</span>GoDrop 보관소<span class="tab-count" id="archiveTabCount">0</span></button>
+  <button class="tab-btn" data-tab="tools"><span class="tab-icon">&#x1F527;</span>데이터 도구</button>
 </div>
 
 <div class="wrap">
-  <div class="grid">
 
-    <!-- Go_filter -->
-    <a class="tool-card" href="gofilter-v1.0.html">
+<!-- ════════ Dashboard ════════ -->
+<div class="tab-panel active" id="panel-dashboard">
+  <div class="dash-grid">
+    <div class="dash-card"><div class="dash-num orange" id="dGodropTotal">0</div><div class="dash-label">GoDrop 보관 파일</div></div>
+    <div class="dash-card"><div class="dash-num green" id="dGodropToday">0</div><div class="dash-label">오늘 투입</div></div>
+    <div class="dash-card"><div class="dash-num blue" id="dGodropSize">0</div><div class="dash-label">총 용량</div></div>
+    <div class="dash-card"><div class="dash-num red" id="dParseCount">0</div><div class="dash-label">선례 DB (파싱)</div></div>
+  </div>
+
+  <div class="health-section">
+    <div class="health-title">&#x1F6A6; 서비스 상태</div>
+    <div class="health-list" id="healthList"></div>
+  </div>
+</div>
+
+<!-- ════════ Settings ════════ -->
+<div class="tab-panel" id="panel-settings">
+
+  <!-- Gemini -->
+  <div class="settings-group">
+    <div class="sg-title"><span class="sg-icon">&#x1F916;</span>Gemini API</div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">Gemini API Key</div>
+        <div class="sr-desc">Gommon Sense, GoDrop 등 전체 도구에서 사용</div>
+      </div>
+      <div class="sr-input-wrap">
+        <input class="sr-input" id="cfgGeminiKey" type="password" placeholder="AIzaSy...">
+        <button class="sr-btn" onclick="saveSetting('gowid_gemini_key','cfgGeminiKey',this)">저장</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">GoTrack 전용 Gemini Key</div>
+        <div class="sr-desc">GoTrack에서 별도로 사용 (비어있으면 공용 키 사용)</div>
+      </div>
+      <div class="sr-input-wrap">
+        <input class="sr-input" id="cfgGotrackKey" type="password" placeholder="AIzaSy... (선택)">
+        <button class="sr-btn" onclick="saveSetting('gotrack_gemini_key','cfgGotrackKey',this)">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slack -->
+  <div class="settings-group">
+    <div class="sg-title"><span class="sg-icon">&#x1F4AC;</span>Slack 연동</div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">Slack Bot Token</div>
+        <div class="sr-desc">Gommon Sense에서 법무팀 DM 전송에 사용</div>
+      </div>
+      <div class="sr-input-wrap">
+        <input class="sr-input" id="cfgSlackToken" type="password" placeholder="xoxb-...">
+        <button class="sr-btn" onclick="saveSetting('gowid_slack_bot_token','cfgSlackToken',this)">저장</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">법무팀 담당자 User ID</div>
+        <div class="sr-desc">DM을 받을 Slack 사용자 ID</div>
+      </div>
+      <div class="sr-input-wrap">
+        <input class="sr-input" id="cfgSlackUser" placeholder="U080B5UD7RA">
+        <button class="sr-btn" onclick="saveSetting('gowid_slack_user_id','cfgSlackUser',this)">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GoTrack Endpoints -->
+  <div class="settings-group">
+    <div class="sg-title"><span class="sg-icon">&#x1F517;</span>GoTrack 엔드포인트</div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">계약서 조회 Endpoint</div>
+        <div class="sr-desc">GoTrack Lookup에서 사용하는 Google Apps Script URL</div>
+      </div>
+      <div class="sr-input-wrap">
+        <input class="sr-input" id="cfgTrackEndpoint" placeholder="https://script.google.com/macros/s/...">
+        <button class="sr-btn" onclick="saveSetting('gotrack_endpoint','cfgTrackEndpoint',this)">저장</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">계약서 생성 Endpoint</div>
+        <div class="sr-desc">GoTrack Generator에서 사용하는 Google Apps Script URL</div>
+      </div>
+      <div class="sr-input-wrap">
+        <input class="sr-input" id="cfgGenEndpoint" placeholder="https://script.google.com/macros/s/...">
+        <button class="sr-btn" onclick="saveSetting('gotrack_gen_endpoint','cfgGenEndpoint',this)">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Management -->
+  <div class="settings-group">
+    <div class="sg-title"><span class="sg-icon">&#x1F5D1;</span>데이터 관리</div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">선례 DB 캐시 초기화</div>
+        <div class="sr-desc">gowid_precedent_db — 다음 분석 시 자동 재생성됩니다</div>
+      </div>
+      <div class="sr-input-wrap" style="max-width:auto">
+        <span class="sr-status" id="precedentStatus">-</span>
+        <button class="sr-btn" onclick="clearData('gowid_precedent_db','precedentStatus',this)" style="color:var(--red);border-color:rgba(255,107,107,.2)">초기화</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">GoDrop 아카이브 초기화</div>
+        <div class="sr-desc">godrop_archive + IndexedDB 파일 전체 삭제</div>
+      </div>
+      <div class="sr-input-wrap" style="max-width:auto">
+        <span class="sr-status" id="godropDataStatus">-</span>
+        <button class="sr-btn" onclick="clearGoDrop(this)" style="color:var(--red);border-color:rgba(255,107,107,.2)">전체 삭제</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="sr-info">
+        <div class="sr-label">Go_parse 아카이브 초기화</div>
+        <div class="sr-desc">goparse_archive — 파싱된 선례 데이터 전체 삭제</div>
+      </div>
+      <div class="sr-input-wrap" style="max-width:auto">
+        <span class="sr-status" id="goparseStatus">-</span>
+        <button class="sr-btn" onclick="clearData('goparse_archive','goparseStatus',this)" style="color:var(--red);border-color:rgba(255,107,107,.2)">초기화</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ GoDrop Archive ════════ -->
+<div class="tab-panel" id="panel-archive">
+  <div class="archive-toolbar">
+    <input class="search-box" id="archiveSearch" placeholder="파일명 또는 ID로 검색...">
+    <button class="btn-t export" id="btnArchiveExport">TSV 내보내기</button>
+    <button class="btn-t danger" id="btnArchiveClear">전체 삭제</button>
+  </div>
+  <div class="archive-list" id="archiveList"></div>
+</div>
+
+<!-- ════════ Data Tools ════════ -->
+<div class="tab-panel" id="panel-tools">
+  <div class="tool-grid">
+
+    <a class="tool-link" href="gofilter-v1.0.html">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#56d4a0,rgba(86,212,160,.3))"></div>
-      <div class="tc-header">
-        <div class="tc-icon" style="background:rgba(86,212,160,.15);color:#56d4a0">&#x1F50D;</div>
-        <div class="tc-title">Go_filter<span class="tc-ver" style="background:rgba(86,212,160,.15);color:#56d4a0">v1.0</span></div>
+      <div class="tl-header">
+        <div class="tl-icon" style="background:rgba(86,212,160,.15);color:#56d4a0">&#x1F50D;</div>
+        <div class="tl-title">Go_filter<span class="tl-ver" style="background:rgba(86,212,160,.15);color:#56d4a0">v1.0</span></div>
       </div>
-      <div class="tc-desc">
-        엘박스·슈퍼로이어 추출 데이터에서 고위드 관련 건만 자동 분류하고 수동 확인 후 내보냅니다. 개인 사건·비관련 건 자동 제외.
+      <div class="tl-desc">엘박스·슈퍼로이어 추출 데이터에서 고위드 관련 건만 자동 분류·필터링</div>
+      <div class="tl-feats">
+        <span class="tl-feat" style="border-color:rgba(86,212,160,.15);color:rgba(86,212,160,.7)">자동 분류</span>
+        <span class="tl-feat" style="border-color:rgba(86,212,160,.15);color:rgba(86,212,160,.7)">수동 확인</span>
+        <span class="tl-feat" style="border-color:rgba(86,212,160,.15);color:rgba(86,212,160,.7)">TSV/JSON</span>
       </div>
-      <div class="tc-features">
-        <span class="tc-feat" style="border-color:rgba(86,212,160,.15);color:rgba(86,212,160,.7)">자동 분류</span>
-        <span class="tc-feat" style="border-color:rgba(86,212,160,.15);color:rgba(86,212,160,.7)">수동 확인</span>
-        <span class="tc-feat" style="border-color:rgba(86,212,160,.15);color:rgba(86,212,160,.7)">TSV/JSON 내보내기</span>
-      </div>
-      <div class="tc-arrow">&#x2192;</div>
+      <div class="tl-arrow">&#x2192;</div>
     </a>
 
-    <!-- Go_parse -->
-    <a class="tool-card" href="goparse-v1.0.html">
+    <a class="tool-link" href="goparse-v1.0.html">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#e8a04c,rgba(232,160,76,.3))"></div>
-      <div class="tc-header">
-        <div class="tc-icon" style="background:rgba(232,160,76,.15);color:#e8a04c">&#x1F4E5;</div>
-        <div class="tc-title">Go_parse<span class="tc-ver" style="background:rgba(232,160,76,.15);color:#e8a04c">v1.0</span></div>
+      <div class="tl-header">
+        <div class="tl-icon" style="background:rgba(232,160,76,.15);color:#e8a04c">&#x1F4E5;</div>
+        <div class="tl-title">Go_parse<span class="tl-ver" style="background:rgba(232,160,76,.15);color:#e8a04c">v1.0</span></div>
       </div>
-      <div class="tc-desc">
-        엘박스·슈퍼로이어에서 주고받은 리걸 AI 스레드를 붙여넣으면 구조화된 선례 데이터로 변환합니다. Google Sheets로 일괄 내보내기 지원.
+      <div class="tl-desc">리걸 AI 스레드를 구조화된 선례 데이터로 변환·Google Sheets 연동</div>
+      <div class="tl-feats">
+        <span class="tl-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">스레드 파싱</span>
+        <span class="tl-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">선례 DB</span>
+        <span class="tl-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">5축 매핑</span>
       </div>
-      <div class="tc-features">
-        <span class="tc-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">스레드 파싱</span>
-        <span class="tc-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">선례 DB 구축</span>
-        <span class="tc-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">TSV/JSON 내보내기</span>
-        <span class="tc-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">5축 매핑</span>
-      </div>
-      <div class="tc-arrow">&#x2192;</div>
+      <div class="tl-arrow">&#x2192;</div>
     </a>
 
-    <!-- GoDrop Archive -->
-    <a class="tool-card" href="godrop-admin.html">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c4863c,rgba(196,134,60,.3))"></div>
-      <div class="tc-header">
-        <div class="tc-icon" style="background:rgba(232,160,76,.15);color:#e8a04c">&#x1F5C4;</div>
-        <div class="tc-title">GoDrop Archive<span class="tc-ver" style="background:rgba(232,160,76,.15);color:#e8a04c">v1.0</span></div>
+    <a class="tool-link" href="generate-sheets-tsv.html">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),rgba(124,140,240,.3))"></div>
+      <div class="tl-header">
+        <div class="tl-icon" style="background:var(--purple-dim);color:var(--purple)">&#x1F4CB;</div>
+        <div class="tl-title">Sheets TSV<span class="tl-ver" style="background:var(--purple-dim);color:var(--purple)">v1.0</span></div>
       </div>
-      <div class="tc-desc">
-        GoDrop으로 투입된 서류의 아카이브 로그를 조회하고 관리합니다. TSV 내보내기 및 개별 삭제 지원.
+      <div class="tl-desc">Google Sheets 연동용 TSV 데이터 생성 도구</div>
+      <div class="tl-feats">
+        <span class="tl-feat" style="border-color:rgba(124,140,240,.15);color:rgba(124,140,240,.7)">TSV 생성</span>
+        <span class="tl-feat" style="border-color:rgba(124,140,240,.15);color:rgba(124,140,240,.7)">Sheets 연동</span>
       </div>
-      <div class="tc-features">
-        <span class="tc-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">아카이브 조회</span>
-        <span class="tc-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">TSV 내보내기</span>
-        <span class="tc-feat" style="border-color:rgba(232,160,76,.15);color:rgba(232,160,76,.7)">개별 삭제</span>
-      </div>
-      <div class="tc-arrow">&#x2192;</div>
+      <div class="tl-arrow">&#x2192;</div>
     </a>
 
   </div>
 </div>
 
-<div class="footer">
-  Go Legal Portal &middot; Admin Tools &middot; 2026<br>
-  법무팀 관리자 전용 도구
 </div>
 
+<div class="footer">
+  Go Legal Portal &middot; Admin &middot; 2026<br>
+  법무팀 관리자 전용
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   IndexedDB (GoDrop file storage)
+   ═══════════════════════════════════════ */
+const DB_NAME = 'godrop_db', DB_VER = 1, STORE = 'files';
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, DB_VER);
+    r.onupgradeneeded = e => { const db = e.target.result; if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, {keyPath:'id'}); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function getFileFromDB(id) {
+  const db = await openDB();
+  return new Promise((res,rej) => { const r = db.transaction(STORE,'readonly').objectStore(STORE).get(id); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); });
+}
+async function deleteFileFromDB(id) {
+  const db = await openDB();
+  return new Promise((res,rej) => { const tx = db.transaction(STORE,'readwrite'); tx.objectStore(STORE).delete(id); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); });
+}
+async function clearAllFilesDB() {
+  const db = await openDB();
+  return new Promise((res,rej) => { const tx = db.transaction(STORE,'readwrite'); tx.objectStore(STORE).clear(); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); });
+}
+
+/* ═══════════════════════════════════════
+   Tab Switching
+   ═══════════════════════════════════════ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ═══════════════════════════════════════
+   Dashboard
+   ═══════════════════════════════════════ */
+function refreshDashboard() {
+  const archive = JSON.parse(localStorage.getItem('godrop_archive') || '[]');
+  const parseArchive = JSON.parse(localStorage.getItem('goparse_archive') || '[]');
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCount = archive.filter(a => a.timestamp && a.timestamp.startsWith(today)).length;
+  const totalSize = archive.reduce((s, a) => s + (a.size || 0), 0);
+
+  document.getElementById('dGodropTotal').textContent = archive.length;
+  document.getElementById('dGodropToday').textContent = todayCount;
+  document.getElementById('dGodropSize').textContent = formatSize(totalSize);
+  document.getElementById('dParseCount').textContent = parseArchive.length;
+  document.getElementById('archiveTabCount').textContent = archive.length;
+
+  // Health checks
+  const checks = [
+    { name: 'Gemini API Key (공용)', key: 'gowid_gemini_key', fallback: 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak' },
+    { name: 'Slack Bot Token', key: 'gowid_slack_bot_token', fallback: 'xoxb-523970022560-10596436186850-EHekobiznpnPYAfU84wCUfgs' },
+    { name: 'Slack User ID', key: 'gowid_slack_user_id', fallback: 'U080B5UD7RA' },
+    { name: 'GoTrack 조회 Endpoint', key: 'gotrack_endpoint', fallback: null },
+    { name: 'GoTrack 생성 Endpoint', key: 'gotrack_gen_endpoint', fallback: null },
+    { name: 'GoTrack Gemini Key', key: 'gotrack_gemini_key', fallback: null },
+  ];
+
+  const $health = document.getElementById('healthList');
+  $health.innerHTML = checks.map(c => {
+    const val = localStorage.getItem(c.key);
+    const effective = val || c.fallback;
+    const status = effective ? 'ok' : (c.fallback === null ? 'warn' : 'err');
+    const display = effective ? maskKey(effective) : '미설정';
+    const source = val ? '(사용자 설정)' : (c.fallback ? '(기본값)' : '');
+    return `<div class="health-item">
+      <span class="health-dot ${status}"></span>
+      <span class="health-name">${c.name}</span>
+      <span class="health-val">${display} ${source}</span>
+    </div>`;
+  }).join('');
+}
+
+function maskKey(val) {
+  if (!val) return '';
+  if (val.length <= 12) return val.substring(0, 4) + '****';
+  return val.substring(0, 8) + '····' + val.substring(val.length - 4);
+}
+
+/* ═══════════════════════════════════════
+   Settings
+   ═══════════════════════════════════════ */
+function loadSettings() {
+  const map = {
+    cfgGeminiKey: 'gowid_gemini_key',
+    cfgGotrackKey: 'gotrack_gemini_key',
+    cfgSlackToken: 'gowid_slack_bot_token',
+    cfgSlackUser: 'gowid_slack_user_id',
+    cfgTrackEndpoint: 'gotrack_endpoint',
+    cfgGenEndpoint: 'gotrack_gen_endpoint',
+  };
+  for (const [inputId, key] of Object.entries(map)) {
+    const val = localStorage.getItem(key);
+    if (val) document.getElementById(inputId).value = val;
+  }
+  // Data status
+  updateDataStatus('gowid_precedent_db', 'precedentStatus');
+  updateDataStatus('godrop_archive', 'godropDataStatus');
+  updateDataStatus('goparse_archive', 'goparseStatus');
+}
+
+function updateDataStatus(key, statusId) {
+  const data = localStorage.getItem(key);
+  const $el = document.getElementById(statusId);
+  if (data) {
+    const parsed = JSON.parse(data || '[]');
+    const count = Array.isArray(parsed) ? parsed.length : 1;
+    $el.textContent = `${count}건`;
+    $el.className = 'sr-status set';
+  } else {
+    $el.textContent = '비어있음';
+    $el.className = 'sr-status empty';
+  }
+}
+
+window.saveSetting = function(key, inputId, btn) {
+  const val = document.getElementById(inputId).value.trim();
+  if (!val) { localStorage.removeItem(key); }
+  else { localStorage.setItem(key, val); }
+  btn.textContent = '저장됨!';
+  btn.classList.add('saved');
+  setTimeout(() => { btn.textContent = '저장'; btn.classList.remove('saved'); }, 1500);
+  refreshDashboard();
+};
+
+window.clearData = function(key, statusId, btn) {
+  const data = localStorage.getItem(key);
+  if (!data) return;
+  if (!confirm('정말 초기화하시겠습니까?')) return;
+  localStorage.removeItem(key);
+  updateDataStatus(key, statusId);
+  btn.textContent = '완료';
+  setTimeout(() => { btn.textContent = '초기화'; }, 1500);
+  refreshDashboard();
+};
+
+window.clearGoDrop = async function(btn) {
+  const archive = JSON.parse(localStorage.getItem('godrop_archive') || '[]');
+  if (archive.length === 0) return;
+  if (!confirm(`GoDrop 전체 ${archive.length}건을 삭제하시겠습니까?\n파일 데이터도 함께 삭제됩니다.`)) return;
+  await clearAllFilesDB();
+  localStorage.removeItem('godrop_archive');
+  updateDataStatus('godrop_archive', 'godropDataStatus');
+  btn.textContent = '완료';
+  setTimeout(() => { btn.textContent = '전체 삭제'; }, 1500);
+  refreshDashboard();
+  renderArchive();
+};
+
+/* ═══════════════════════════════════════
+   GoDrop Archive
+   ═══════════════════════════════════════ */
+let gdArchive = [];
+
+function renderArchive() {
+  gdArchive = JSON.parse(localStorage.getItem('godrop_archive') || '[]');
+  const q = document.getElementById('archiveSearch').value.toLowerCase().trim();
+  const list = q ? gdArchive.filter(a => (a.name + ' ' + a.id).toLowerCase().includes(q)) : gdArchive;
+  const $list = document.getElementById('archiveList');
+
+  if (list.length === 0) {
+    $list.innerHTML = `<div class="archive-empty"><div class="ae-icon">&#x1F4ED;</div>${gdArchive.length === 0 ? '아직 보관된 서류가 없습니다' : '검색 결과가 없습니다'}</div>`;
+    return;
+  }
+  $list.innerHTML = list.map(a => `
+    <div class="archive-item">
+      <span class="ar-icon">${fileIcon(a.name)}</span>
+      <div class="ar-body">
+        <div class="ar-name">${esc(a.name)}</div>
+        <div class="ar-meta">
+          <span class="ar-id">${a.id}</span>
+          <span>${formatSize(a.size)}</span>
+          <span>${a.dateStr || ''}</span>
+        </div>
+      </div>
+      <div class="ar-actions">
+        <button class="ar-btn open" onclick="openFile('${a.id}')">열기</button>
+        <button class="ar-btn dl" onclick="downloadFile('${a.id}')">다운로드</button>
+        <button class="ar-btn del" onclick="removeArchiveItem('${a.id}')">&times;</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('archiveSearch').addEventListener('input', renderArchive);
+
+window.openFile = async function(id) {
+  const file = await getFileFromDB(id);
+  if (!file?.data) return alert('파일 데이터를 찾을 수 없습니다.');
+  const blob = new Blob([file.data], { type: file.type || 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+};
+
+window.downloadFile = async function(id) {
+  const file = await getFileFromDB(id);
+  if (!file?.data) return alert('파일 데이터를 찾을 수 없습니다.');
+  const blob = new Blob([file.data], { type: file.type || 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = file.name; link.click();
+  URL.revokeObjectURL(url);
+};
+
+window.removeArchiveItem = async function(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  await deleteFileFromDB(id);
+  gdArchive = gdArchive.filter(a => a.id !== id);
+  localStorage.setItem('godrop_archive', JSON.stringify(gdArchive));
+  renderArchive();
+  refreshDashboard();
+};
+
+document.getElementById('btnArchiveClear').addEventListener('click', async () => {
+  if (gdArchive.length === 0) return;
+  if (!confirm(`전체 ${gdArchive.length}건을 삭제하시겠습니까?`)) return;
+  await clearAllFilesDB();
+  localStorage.removeItem('godrop_archive');
+  renderArchive();
+  refreshDashboard();
+});
+
+document.getElementById('btnArchiveExport').addEventListener('click', () => {
+  if (gdArchive.length === 0) return alert('내보낼 데이터가 없습니다.');
+  const header = ['ID','파일명','크기','일시'].join('\t');
+  const rows = gdArchive.map(a => [a.id, a.name, formatSize(a.size), a.dateStr||''].join('\t'));
+  const blob = new Blob(['\uFEFF' + [header,...rows].join('\n')], {type:'text/tab-separated-values;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  const d = new Date();
+  link.download = `GoDrop_Archive_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.tsv`;
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ═══════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════ */
+function formatSize(b) {
+  if (!b) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  if (b < 1073741824) return (b/1048576).toFixed(1) + ' MB';
+  return (b/1073741824).toFixed(1) + ' GB';
+}
+function fileIcon(n) {
+  const ext = (n||'').split('.').pop().toLowerCase();
+  const m = {pdf:'&#x1F4D5;',doc:'&#x1F4D8;',docx:'&#x1F4D8;',xls:'&#x1F4D7;',xlsx:'&#x1F4D7;',hwp:'&#x1F4D9;',hwpx:'&#x1F4D9;',jpg:'&#x1F5BC;',jpeg:'&#x1F5BC;',png:'&#x1F5BC;',tif:'&#x1F5BC;',tiff:'&#x1F5BC;'};
+  return m[ext] || '&#x1F4C4;';
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+/* ═══════════════════════════════════════
+   Init
+   ═══════════════════════════════════════ */
+refreshDashboard();
+loadSettings();
+renderArchive();
+</script>
 <script src="auth-gate.js"></script>
 </body>
 </html>
