@@ -595,18 +595,14 @@ async function scanAndBuildForm() {
     document.getElementById('scanStatus').textContent = '문서 텍스트 추출 중...';
     const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
     const scanRes = await fetch(endpoint + '?action=scan&templateUrl=' + encodeURIComponent(selectedContract.url));
-    const rawText = await scanRes.text();
-    // 제어문자를 문자 단위로 제거 (JSON.stringify가 이스케이프 못한 문자 처리)
-    let cleaned = '';
-    for (let i = 0; i < rawText.length; i++) {
-      const c = rawText.charCodeAt(i);
-      if (c >= 32 && c !== 127) { cleaned += rawText[i]; }
-      else if (c === 9 || c === 10 || c === 13) { cleaned += ' '; }
-    }
-    const scanData = JSON.parse(cleaned);
+    const scanData = await scanRes.json();
     if (scanData.error) throw new Error(scanData.error);
 
-    templateText = (scanData.text || '') + '\n\n[테이블]\n' + (scanData.tableText || '');
+    // Base64 디코딩
+    const binaryStr = atob(scanData.textBase64);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+    templateText = new TextDecoder('utf-8').decode(bytes);
 
     // Step B: Gemini로 공란 감지
     document.getElementById('scanStatus').textContent = 'AI가 공란을 분석 중...';
