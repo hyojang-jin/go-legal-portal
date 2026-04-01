@@ -108,6 +108,36 @@
   .ar-btn.dl:hover{background:var(--t08);color:var(--t80)}
   .ar-btn.del{border-color:rgba(255,107,107,.15);color:var(--t30)}
   .ar-btn.del:hover{color:var(--red);background:var(--accent-dim)}
+  .ar-btn.classify{border-color:rgba(124,140,240,.2);color:var(--purple)}
+  .ar-btn.classify:hover{background:var(--purple-dim)}
+  .ar-btn.classify.done{border-color:var(--green-dim);color:var(--green);cursor:default}
+  .ar-badge{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;flex-shrink:0}
+  .ar-badge.type{background:var(--orange-dim);color:var(--orange)}
+  .ar-badge.sign{background:var(--t08);color:var(--t60)}
+  .ar-badge.dept{background:var(--green-dim);color:var(--green)}
+  .ar-classified{font-size:11px;color:var(--t60);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+  /* Classify toolbar */
+  .classify-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:12px 16px;background:var(--card);border:1px solid var(--t15);border-radius:10px}
+  .classify-bar .cb-info{flex:1;font-size:12px;color:var(--t60)}
+  .classify-bar .cb-info strong{color:var(--t80)}
+  .btn-classify-all{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;border:1px solid rgba(124,140,240,.3);background:var(--purple-dim);color:var(--purple);display:flex;align-items:center;gap:6px}
+  .btn-classify-all:hover{background:rgba(124,140,240,.2);box-shadow:0 2px 12px rgba(124,140,240,.15)}
+  .btn-classify-all:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+  .btn-classify-all .spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(124,140,240,.2);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Category groups */
+  .cat-group{margin-bottom:16px}
+  .cat-header{display:flex;align-items:center;gap:8px;padding:8px 0;margin-bottom:6px;border-bottom:1px solid var(--t08)}
+  .cat-header .cat-name{font-size:13px;font-weight:700;color:var(--t80)}
+  .cat-header .cat-count{font-size:10px;padding:2px 8px;border-radius:8px;background:var(--orange-dim);color:var(--orange);font-weight:700}
+
+  /* Filter pills */
+  .filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .filter-pill{font-size:11px;padding:5px 12px;border:1px solid var(--t15);border-radius:16px;cursor:pointer;transition:all .15s;background:transparent;color:var(--t60);font-weight:500;font-family:inherit}
+  .filter-pill:hover{border-color:var(--orange);color:var(--orange);background:var(--orange-dim)}
+  .filter-pill.active{border-color:var(--orange);color:#fff;background:var(--orange)}
 
   /* ─── Tools ─── */
   .tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -298,8 +328,18 @@
 
 <!-- ════════ GoDrop Archive ════════ -->
 <div class="tab-panel" id="panel-archive">
+  <!-- Classify bar -->
+  <div class="classify-bar">
+    <div class="cb-info">&#x1F916; <strong>AI 자동 분류</strong> — 미분류 파일을 Gemini가 유형별로 분류합니다 <span id="classifyStatus"></span></div>
+    <button class="btn-classify-all" id="btnClassifyAll">&#x2728; 전체 분류</button>
+  </div>
+
+  <!-- Filter pills -->
+  <div class="filter-pills" id="filterPills"></div>
+
+  <!-- Toolbar -->
   <div class="archive-toolbar">
-    <input class="search-box" id="archiveSearch" placeholder="파일명 또는 ID로 검색...">
+    <input class="search-box" id="archiveSearch" placeholder="파일명, ID, 유형, 상대방 검색...">
     <button class="btn-t export" id="btnArchiveExport">TSV 내보내기</button>
     <button class="btn-t danger" id="btnArchiveClear">전체 삭제</button>
   </div>
@@ -520,25 +560,79 @@ window.clearGoDrop = async function(btn) {
 };
 
 /* ═══════════════════════════════════════
-   GoDrop Archive
+   GoDrop Archive + AI Classification
    ═══════════════════════════════════════ */
+const DEFAULT_KEY = 'AIzaSyD_WgC8gn6F0A2XzXCGbJvzcSHxDEN1jak';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 let gdArchive = [];
+let activeFilter = '';
 
+function getGeminiKey() {
+  return localStorage.getItem('gowid_gemini_key') || DEFAULT_KEY;
+}
+
+/* ── Render ── */
 function renderArchive() {
   gdArchive = JSON.parse(localStorage.getItem('godrop_archive') || '[]');
   const q = document.getElementById('archiveSearch').value.toLowerCase().trim();
-  const list = q ? gdArchive.filter(a => (a.name + ' ' + a.id).toLowerCase().includes(q)) : gdArchive;
-  const $list = document.getElementById('archiveList');
+  let list = gdArchive;
+  if (activeFilter) list = list.filter(a => (a.docType || '미분류') === activeFilter);
+  if (q) list = list.filter(a => [a.name, a.id, a.docType, a.counterparty, a.summary].join(' ').toLowerCase().includes(q));
 
+  // Update classify status
+  const unclassified = gdArchive.filter(a => !a.docType).length;
+  document.getElementById('classifyStatus').textContent = unclassified > 0 ? `(미분류 ${unclassified}건)` : '(전체 분류 완료)';
+  document.getElementById('btnClassifyAll').disabled = unclassified === 0;
+
+  // Render filter pills
+  renderFilterPills();
+
+  const $list = document.getElementById('archiveList');
   if (list.length === 0) {
     $list.innerHTML = `<div class="archive-empty"><div class="ae-icon">&#x1F4ED;</div>${gdArchive.length === 0 ? '아직 보관된 서류가 없습니다' : '검색 결과가 없습니다'}</div>`;
     return;
   }
-  $list.innerHTML = list.map(a => `
+
+  // Group by docType
+  const groups = {};
+  list.forEach(a => {
+    const cat = a.docType || '미분류';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(a);
+  });
+
+  // Sort: 미분류 last
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    if (a === '미분류') return 1;
+    if (b === '미분류') return -1;
+    return a.localeCompare(b);
+  });
+
+  $list.innerHTML = sortedKeys.map(cat => `
+    <div class="cat-group">
+      <div class="cat-header">
+        <span class="cat-name">${cat === '미분류' ? '&#x1F4C2; 미분류' : '&#x1F4C1; ' + esc(cat)}</span>
+        <span class="cat-count">${groups[cat].length}</span>
+      </div>
+      ${groups[cat].map(a => renderArchiveItem(a)).join('')}
+    </div>
+  `).join('');
+}
+
+function renderArchiveItem(a) {
+  const classified = !!a.docType;
+  return `
     <div class="archive-item">
       <span class="ar-icon">${fileIcon(a.name)}</span>
       <div class="ar-body">
         <div class="ar-name">${esc(a.name)}</div>
+        ${classified ? `<div class="ar-classified">
+          <span class="ar-badge type">${esc(a.docType)}</span>
+          ${a.signType ? `<span class="ar-badge sign">${esc(a.signType)}</span>` : ''}
+          ${a.department ? `<span class="ar-badge dept">${esc(a.department)}</span>` : ''}
+          ${a.counterparty ? `<span style="font-size:11px;color:var(--t60)">${esc(a.counterparty)}</span>` : ''}
+        </div>` : ''}
+        ${a.summary ? `<div style="font-size:11px;color:var(--t30);margin-top:1px">${esc(a.summary)}</div>` : ''}
         <div class="ar-meta">
           <span class="ar-id">${a.id}</span>
           <span>${formatSize(a.size)}</span>
@@ -546,16 +640,124 @@ function renderArchive() {
         </div>
       </div>
       <div class="ar-actions">
+        ${!classified ? `<button class="ar-btn classify" onclick="classifySingle('${a.id}',this)">&#x1F916; 분류</button>` : ''}
         <button class="ar-btn open" onclick="openFile('${a.id}')">열기</button>
         <button class="ar-btn dl" onclick="downloadFile('${a.id}')">다운로드</button>
         <button class="ar-btn del" onclick="removeArchiveItem('${a.id}')">&times;</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
 }
+
+/* ── Filter Pills ── */
+function renderFilterPills() {
+  const types = {};
+  gdArchive.forEach(a => { const t = a.docType || '미분류'; types[t] = (types[t]||0) + 1; });
+  const $pills = document.getElementById('filterPills');
+  if (Object.keys(types).length <= 1) { $pills.innerHTML = ''; return; }
+  const pills = [`<button class="filter-pill ${!activeFilter?'active':''}" onclick="setFilter('')">전체 (${gdArchive.length})</button>`];
+  Object.entries(types).sort((a,b)=>a[0]==='미분류'?1:b[0]==='미분류'?-1:a[0].localeCompare(b[0])).forEach(([t,c]) => {
+    pills.push(`<button class="filter-pill ${activeFilter===t?'active':''}" onclick="setFilter('${esc(t)}')">${esc(t)} (${c})</button>`);
+  });
+  $pills.innerHTML = pills.join('');
+}
+
+window.setFilter = function(f) {
+  activeFilter = f;
+  renderArchive();
+};
 
 document.getElementById('archiveSearch').addEventListener('input', renderArchive);
 
+/* ── AI Classification ── */
+async function classifyFileAI(fileEntry) {
+  const file = await getFileFromDB(fileEntry.id);
+  if (!file?.data) throw new Error('파일 데이터 없음');
+
+  const ext = fileEntry.name.split('.').pop().toLowerCase();
+  const isVisual = ['pdf','jpg','jpeg','png','tif','tiff'].includes(ext);
+  const mimeMap = {pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',tif:'image/tiff',tiff:'image/tiff'};
+
+  const prompt = `이 문서를 분석하여 아래 JSON으로 분류하세요. JSON만 출력하세요.
+{"docType":"문서유형(계약서/공문/내용증명/인감증명서/사업자등록증/등기부등본/위임장/각서·확인서/NDA/MOU·LOI/견적서/세금계산서/회의록/기타)","signType":"서명유형(전자서명본/날인본·스캔/사본/원본·미서명/판별불가)","department":"관련부서(경영지원/재무/인사/영업/마케팅/개발/제품/디자인/CS/법무/기타)","counterparty":"상대방(없으면빈문자열)","title":"제목(20자이내)","summary":"요약(30자이내)"}`;
+
+  const parts = [{ text: prompt }];
+  if (isVisual) {
+    const buf = new Uint8Array(file.data);
+    let binary = '';
+    for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+    const base64 = btoa(binary);
+    parts.push({ inlineData: { mimeType: mimeMap[ext] || 'application/octet-stream', data: base64 } });
+  } else {
+    parts.push({ text: `\n[파일명: ${fileEntry.name}]\n파일명 기반으로 추정해 주세요.` });
+  }
+
+  const key = getGeminiKey();
+  const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } }
+    })
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data?.error?.message || `HTTP ${resp.status}`);
+
+  const allParts = data.candidates?.[0]?.content?.parts || [];
+  const allText = allParts.map(p => p.text || '').join('\n');
+  const codeBlock = allText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const rawJson = codeBlock ? codeBlock[1] : allText.match(/(\{[\s\S]*\})/)?.[1];
+  if (!rawJson) throw new Error('응답 파싱 실패');
+  return JSON.parse(rawJson);
+}
+
+window.classifySingle = async function(id, btn) {
+  const entry = gdArchive.find(a => a.id === id);
+  if (!entry) return;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const result = await classifyFileAI(entry);
+    Object.assign(entry, result);
+    localStorage.setItem('godrop_archive', JSON.stringify(gdArchive));
+    renderArchive();
+  } catch (e) {
+    alert('분류 실패: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '&#x1F916; 분류';
+  }
+};
+
+document.getElementById('btnClassifyAll').addEventListener('click', async () => {
+  const btn = document.getElementById('btnClassifyAll');
+  const unclassified = gdArchive.filter(a => !a.docType);
+  if (unclassified.length === 0) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 분류 중...';
+  let done = 0, fail = 0;
+
+  for (const entry of unclassified) {
+    document.getElementById('classifyStatus').textContent = `(${done+1}/${unclassified.length} 처리 중...)`;
+    try {
+      const result = await classifyFileAI(entry);
+      Object.assign(entry, result);
+      done++;
+    } catch (e) {
+      fail++;
+    }
+    localStorage.setItem('godrop_archive', JSON.stringify(gdArchive));
+  }
+
+  btn.innerHTML = '&#x2728; 전체 분류';
+  btn.disabled = false;
+  renderArchive();
+  refreshDashboard();
+  if (fail > 0) alert(`${done}건 분류 완료, ${fail}건 실패`);
+});
+
+/* ── File Operations ── */
 window.openFile = async function(id) {
   const file = await getFileFromDB(id);
   if (!file?.data) return alert('파일 데이터를 찾을 수 없습니다.');
@@ -595,8 +797,8 @@ document.getElementById('btnArchiveClear').addEventListener('click', async () =>
 
 document.getElementById('btnArchiveExport').addEventListener('click', () => {
   if (gdArchive.length === 0) return alert('내보낼 데이터가 없습니다.');
-  const header = ['ID','파일명','크기','일시'].join('\t');
-  const rows = gdArchive.map(a => [a.id, a.name, formatSize(a.size), a.dateStr||''].join('\t'));
+  const header = ['ID','파일명','문서유형','서명유형','부서','상대방','제목','요약','크기','일시'].join('\t');
+  const rows = gdArchive.map(a => [a.id, a.name, a.docType||'', a.signType||'', a.department||'', a.counterparty||'', a.title||'', a.summary||'', formatSize(a.size), a.dateStr||''].join('\t'));
   const blob = new Blob(['\uFEFF' + [header,...rows].join('\n')], {type:'text/tab-separated-values;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
