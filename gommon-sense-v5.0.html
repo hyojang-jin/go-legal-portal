@@ -1043,9 +1043,8 @@ async function callAI(userText, systemPrompt, precedentContext = '') {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    if (res.status === 401 || res.status === 403) throw new Error('API 키가 유효하지 않습니다. 키를 확인해 주세요.');
-    if (res.status === 429) throw new Error('요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.');
-    throw new Error(err.error?.message || `API 오류 (${res.status})`);
+    const msg = err.error?.message || `HTTP ${res.status}`;
+    throw new Error(`API 오류: ${msg}`);
   }
 
   const data = await res.json();
