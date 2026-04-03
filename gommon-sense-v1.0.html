@@ -240,6 +240,27 @@
 
   .error-box{margin-top:24px;padding:16px 20px;background:var(--red-bg);border:1px solid rgba(255,107,107,.25);border-radius:var(--r);font-size:14px;color:var(--red)}
 
+  /* 5축 가이드 */
+  .axis-guide{margin-bottom:16px}
+  .axis-guide-toggle{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--t08);border:1px solid var(--t15);border-radius:10px;cursor:pointer;transition:all .2s;user-select:none;font-size:13px;color:var(--t60);font-weight:500}
+  .axis-guide-toggle:hover{border-color:var(--accent);color:var(--t80);background:var(--accent-dim)}
+  .axis-guide-toggle .ag-chevron{font-size:10px;color:var(--t30);transition:transform .2s;display:inline-block;width:14px}
+  .axis-guide-toggle .ag-chevron.open{transform:rotate(90deg);color:var(--accent)}
+  .axis-guide-body{display:none;margin-top:8px;padding:16px;background:var(--card);border:1px solid var(--t15);border-radius:10px}
+  .axis-guide-body.open{display:block}
+  .ag-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--t08)}
+  .ag-item:last-child{border-bottom:none}
+  .ag-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+  .ag-icon.s1{background:rgba(124,140,240,.15);color:var(--accent)}
+  .ag-icon.s2{background:rgba(255,107,107,.12);color:var(--red)}
+  .ag-icon.s3{background:rgba(105,219,124,.12);color:var(--green)}
+  .ag-icon.s4{background:rgba(255,212,59,.10);color:var(--yellow)}
+  .ag-icon.s5{background:rgba(160,140,240,.15);color:#a08cf0}
+  .ag-body{flex:1;min-width:0}
+  .ag-title{font-size:13px;font-weight:700;color:var(--t80);margin-bottom:2px}
+  .ag-desc{font-size:12px;color:var(--t60);line-height:1.6}
+  .ag-key{font-size:11px;color:var(--t30);margin-top:2px;font-style:italic}
+
   @media(max-width:600px){.wrap{padding:12px}.input-card{padding:18px}.flag-card{flex-direction:column;gap:10px}.api-row{flex-direction:column}.mode-tabs{flex-direction:column}.source-badges{gap:6px}}
 
   @media print{header{border:none}.btn-scan,.quick-tags,.doc-type-tags,.reset-btn,.api-row,.api-status,.api-link,.doc-toggle,.doc-area,.top-nav,.mode-tabs,.source-badges{display:none}.input-card,.flag-card,.clause-card,.headline-box,.blind-spot,.next-move,.slack-draft,.review-summary{border:1px solid #444}}
@@ -250,7 +271,7 @@
   <a class="nav-home" href="gowid-legal-portal.html">&#x2190; Gowid Legal Portal</a>
   <span class="nav-title" onclick="resetAll()">Gommon Sense<span class="nav-ver">v1.0</span></span>
 </nav>
-<header>
+<header onclick="location.reload()" style="cursor:pointer">
   <h1><span>Gommon</span> Sense<span class="ver">v1.0</span></h1>
   <p>AI 기반 법무 리스크 분석 + 1차 법률검토</p>
   <div class="source-badges">
@@ -280,6 +301,56 @@
     <div id="riskModeUI">
       <h2>어떤 상황인지 알려 주세요</h2>
       <p class="hint">진행하려는 업무, 검토가 필요한 상황, 궁금한 점 등을 자유롭게 적어 주세요.</p>
+
+      <!-- 5축 리스크 가이드 -->
+      <div class="axis-guide">
+        <div class="axis-guide-toggle" onclick="toggleAxisGuide()">
+          <span class="ag-chevron" id="agChevron">&#x25B6;</span>
+          고위드 법무 5축 리스크 검토 프레임워크란?
+        </div>
+        <div class="axis-guide-body" id="agBody">
+          <div class="ag-item">
+            <div class="ag-icon s1">&#x25B3;</div>
+            <div class="ag-body">
+              <div class="ag-title">1. 구조 리스크 (Structure)</div>
+              <div class="ag-desc">형식과 실질의 괴리. FUEL이 실질적 대출인지, VWS가 실질적 매매인지, 렌탈이 금융리스인지.</div>
+              <div class="ag-key">핵심: 형식=실질 정합성이 무너지면 무허가 금융행위 + 이용자보호법 적용</div>
+            </div>
+          </div>
+          <div class="ag-item">
+            <div class="ag-icon s2">&#x25C8;</div>
+            <div class="ag-body">
+              <div class="ag-title">2. 무허가 리스크 (License)</div>
+              <div class="ag-desc">여전법·대부업법·채권추심법 인허가 접점. 수수료 구조가 이자에 해당하는지, 추심행위가 채권추심업에 해당하는지.</div>
+              <div class="ag-key">핵심: 무자격자의 '금융행위 경계선' 판단</div>
+            </div>
+          </div>
+          <div class="ag-item">
+            <div class="ag-icon s3">&#x25CF;</div>
+            <div class="ag-body">
+              <div class="ag-title">3. 데이터 리스크 (Data)</div>
+              <div class="ag-desc">신용정보법 3개월 파기, 국외이전 동의, 주민번호 즉시파기, 개인정보 목적외 이용.</div>
+              <div class="ag-key">핵심: 핀테크 특성상 데이터 활용 범위가 넓어 위반 가능성 상시 존재</div>
+            </div>
+          </div>
+          <div class="ag-item">
+            <div class="ag-icon s4">&#x25C6;</div>
+            <div class="ag-body">
+              <div class="ag-title">4. 거래 리스크 (Transaction)</div>
+              <div class="ag-desc">자회사 배임·부당지원, 이해충돌, 특수관계인 거래. arm's length 원칙 준수 여부.</div>
+              <div class="ag-key">핵심: 자회사 간 거래에서 독자적 경제적 이익 구조 입증</div>
+            </div>
+          </div>
+          <div class="ag-item">
+            <div class="ag-icon s5">&#x25A0;</div>
+            <div class="ag-body">
+              <div class="ag-title">5. 약관 리스크 (Terms)</div>
+              <div class="ag-desc">약관규제법 불공정성(자동연장, 위약벌, 면책), 공정거래법, 포인트 재산권, 약관 개정 절차.</div>
+              <div class="ag-key">핵심: 법인 고객 대상이라도 약관규제법 적용됨</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <textarea class="main-input" id="userInput" placeholder="예: FUEL 수수료를 올리려고 합니다&#10;&#10;예: 해외 파트너사와 데이터 공유 계약을 맺으려 합니다&#10;&#10;예: 신규 약관에 자동연장 조항을 넣으려고 합니다" oninput="toggleBtn()"></textarea>
       <div class="quick-tags">
         <span class="q-tag" onclick="injectTag(this)">FUEL 관련</span>
@@ -1072,6 +1143,13 @@ function toggleBtn() {
     const hasDoc = !!document.getElementById('reviewDocInput').value.trim();
     btn.disabled = !(hasKey && hasDoc);
   }
+}
+
+function toggleAxisGuide() {
+  const body = document.getElementById('agBody');
+  const chevron = document.getElementById('agChevron');
+  const isOpen = body.classList.toggle('open');
+  chevron.classList.toggle('open', isOpen);
 }
 
 function toggleDoc() {
