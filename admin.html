@@ -494,7 +494,7 @@ function refreshDashboard() {
   ];
 
   const $health = document.getElementById('healthList');
-  $health.innerHTML = checks.map(c => {
+  let healthHtml = checks.map(c => {
     const val = localStorage.getItem(c.key);
     const effective = val || c.fallback;
     const status = effective ? 'ok' : (c.fallback === null ? 'warn' : 'err');
@@ -506,6 +506,17 @@ function refreshDashboard() {
       <span class="health-val">${display} ${source}</span>
     </div>`;
   }).join('');
+
+  // 검토 선례 DB 상태
+  const precStatus = JSON.parse(localStorage.getItem('gowid_precedent_status') || '{}');
+  const precOk = precStatus.ok === true;
+  healthHtml += `<div class="health-item">
+    <span class="health-dot ${precOk ? 'ok' : 'err'}"></span>
+    <span class="health-name">검토 선례 DB</span>
+    <span class="health-val">${precOk ? precStatus.count + '건 연결됨' : '미연결 — Gommon Sense 최초 접속 필요'}</span>
+  </div>`;
+
+  $health.innerHTML = healthHtml;
 }
 
 function maskKey(val) {

@@ -273,7 +273,7 @@
 
   <div class="input-card">
 
-    <div id="precedentStatus" style="font-size:12px;color:var(--t30);margin-bottom:12px">선례 DB 로드 중...</div>
+    <div id="precedentStatus" style="display:none"></div>
     <input type="file" id="precedentFile" accept=".json" style="display:none" onchange="handlePrecedentUpload(event)">
 
     <!-- ===== RISK MODE ===== -->
@@ -889,7 +889,7 @@ async function loadPrecedentDB() {
   }
 
   try {
-    const res = await fetch('gowid_filtered.json');
+    const res = await fetch('gowid_precedent_light.json');
     if (res.ok) {
       const data = await res.json();
       precedentDB = (data.chats || []).map(c => ({
@@ -967,15 +967,15 @@ function formatPrecedentsForPrompt(precedents) {
 }
 
 function updatePrecedentStatus() {
-  const el = document.getElementById('precedentStatus');
-  if (!el) return;
+  // Admin 대시보드용 상태 기록 (사용자에게는 노출하지 않음)
   if (precedentLoaded && precedentDB.length > 0) {
-    const detail = `${precedentDB.length}건 로드됨`;
-    el.innerHTML = `<span style="color:var(--green)">&#x2713;</span> 고위드 법무 검토 선례 ${detail}`;
-    el.style.color = 'var(--green)';
+    localStorage.setItem('gowid_precedent_status', JSON.stringify({
+      ok: true, count: precedentDB.length, ts: new Date().toISOString()
+    }));
   } else {
-    el.innerHTML = `검토 선례 DB 미연결 — <span style="cursor:pointer;text-decoration:underline" onclick="document.getElementById('precedentFile').click()">JSON 업로드</span>`;
-    el.style.color = 'var(--t30)';
+    localStorage.setItem('gowid_precedent_status', JSON.stringify({
+      ok: false, count: 0, ts: new Date().toISOString()
+    }));
   }
 }
 
