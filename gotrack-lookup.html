@@ -111,7 +111,6 @@
   <div class="conn-bar loading" id="connBar">
     <span class="conn-dot"></span>
     <span id="connMsg">연결 확인 중...</span>
-    <a class="conn-action" href="admin.html" style="text-decoration:none">Admin 설정</a>
   </div>
 
   <!-- Setup moved to Admin page -->
@@ -225,7 +224,7 @@ async function fetchData(endpoint) {
     const data = JSON.parse(text);
     if (data.error) throw new Error(data.error);
     LINK_DATA = data;
-    setConn('ok', LINK_DATA.length + '개 계약서 연동됨');
+    document.getElementById('connBar').style.display = 'none';
     document.getElementById('mainContent').classList.remove('hidden');
     render();
     return;
@@ -249,7 +248,7 @@ async function fetchData(endpoint) {
     });
     if (data.error) throw new Error(data.error);
     LINK_DATA = data;
-    setConn('ok', LINK_DATA.length + '개 계약서 연동됨');
+    document.getElementById('connBar').style.display = 'none';
     document.getElementById('mainContent').classList.remove('hidden');
     render();
     return;
