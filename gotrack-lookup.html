@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Go_track Lookup — 현행 계약서 빠른 조회</title>
+<title>Go_track Live — 현행 계약서 빠른 조회</title>
 <style>
   :root{--bg:#0f0f14;--card:#1a1a24;--accent:#6ec8a0;--accent-dim:rgba(110,200,160,.15);--green:#69db7c;--green-bg:rgba(105,219,124,.10);--yellow:#ffd43b;--red:#ff6b6b;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:10px}
   *{margin:0;padding:0;box-sizing:border-box}
@@ -75,6 +75,7 @@
   .row .r-name{font-size:13px;color:var(--t80);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .row .r-badge{font-size:9px;color:var(--green);font-weight:700;padding:2px 6px;border:1px solid rgba(105,219,124,.2);border-radius:3px;flex-shrink:0}
   .row .r-norev{font-size:9px;color:var(--t30);padding:2px 6px;border:1px solid var(--t08);border-radius:3px;flex-shrink:0}
+  .row .r-old{font-size:9px;color:var(--yellow);font-weight:700;padding:2px 6px;border:1px solid rgba(255,212,59,.2);border-radius:3px;flex-shrink:0}
   .row .r-open{background:none;border:1px solid var(--accent);border-radius:5px;padding:4px 12px;font-size:11px;color:var(--accent);cursor:pointer;transition:all .15s;flex-shrink:0;font-family:inherit;text-decoration:none;font-weight:600}
   .row .r-open:hover{background:var(--accent);color:#111}
   .row .r-nolink{background:none;border:1px solid var(--t08);border-radius:5px;padding:4px 12px;font-size:11px;color:var(--t30);flex-shrink:0;font-family:inherit;cursor:default}
@@ -96,12 +97,13 @@
 </head>
 <body>
 <nav class="top-nav">
-  <a class="nav-home" href="index.html">&#x2190; Go Legal Portal</a>
-  <span class="nav-title" onclick="location.reload()">Go_track<span class="nav-ver">Lookup</span></span>
+  <a class="nav-home" href="gowid-legal-portal.html">&#x2190; Gowid Legal Portal</a>
+  <span class="nav-title" onclick="location.reload()">Go_track<span class="nav-ver">Live</span></span>
 </nav>
 <header>
-  <h1><span>Go</span>_track <span class="ver">Lookup</span></h1>
+  <h1><span>Go</span>_track <span class="ver">Live</span></h1>
   <p>현행 계약서 빠른 조회 &middot; Google Docs 바로 열기</p>
+  <p style="font-size:11px;color:var(--yellow);margin-top:6px">실제 활용 시 Docs 원문이 아닌 <strong>사본을 생성</strong>한 후 보충·제작해 주세요.</p>
 </header>
 <div class="wrap">
 
@@ -109,30 +111,10 @@
   <div class="conn-bar loading" id="connBar">
     <span class="conn-dot"></span>
     <span id="connMsg">연결 확인 중...</span>
-    <button class="conn-action" id="connAction" onclick="showSetup()">설정</button>
+    <a class="conn-action" href="admin.html" style="text-decoration:none">Admin 설정</a>
   </div>
 
-  <!-- Setup (hidden by default if already connected) -->
-  <div class="setup-card hidden" id="setupCard">
-    <h3>Google Sheets 연동 설정</h3>
-    <p>스프레드시트의 계약서 링크를 자동으로 불러옵니다. 최초 1회만 설정하면 됩니다.</p>
-
-    <div class="step" data-n="1">스프레드시트에서 <code>확장 프로그램</code> → <code>Apps Script</code></div>
-    <div class="step" data-n="2">기존 코드를 지우고 아래 스크립트를 붙여넣은 후 저장 (Ctrl+S)</div>
-
-    <div class="script-box">
-      <button class="copy-script" onclick="copyScript(this)">복사</button>
-      <pre id="scriptCode"></pre>
-    </div>
-
-    <div class="step" data-n="3"><code>배포</code> → <code>새 배포</code> → 유형: <code>웹 앱</code> → 액세스: <code>모든 사용자</code> → 배포</div>
-    <div class="step" data-n="4">생성된 URL을 아래에 붙여넣기</div>
-
-    <div class="url-row">
-      <input type="text" id="endpointInput" placeholder="https://script.google.com/macros/s/.../exec">
-      <button onclick="saveEndpoint()">연결</button>
-    </div>
-  </div>
+  <!-- Setup moved to Admin page -->
 
   <!-- Main content -->
   <div id="mainContent" class="hidden">
@@ -149,7 +131,7 @@
   </div>
 
   <div class="footer">
-    Go_track Lookup &middot; 상세 변경 이력은 <a href="gotrack-v1.0.html">Go_track v1.0</a>에서 확인
+    Go_track Live &middot; 상세 변경 이력은 <a href="gotrack-v1.0.html">Go_track v1.0</a>에서 확인
   </div>
 </div>
 
@@ -219,9 +201,7 @@ const DEFAULT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwMZMDfC7-2OOc
 
 // ========== Init ==========
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('scriptCode').textContent = APPS_SCRIPT;
   initTabs();
-
   const endpoint = localStorage.getItem('gotrack_endpoint') || DEFAULT_ENDPOINT;
   fetchData(endpoint);
 });
@@ -234,22 +214,6 @@ function setConn(state, msg) {
   msgEl.textContent = msg;
 }
 
-function showSetup() {
-  document.getElementById('setupCard').classList.remove('hidden');
-  const existing = localStorage.getItem('gotrack_endpoint');
-  if (existing) document.getElementById('endpointInput').value = existing;
-}
-
-function hideSetup() {
-  document.getElementById('setupCard').classList.add('hidden');
-}
-
-function saveEndpoint() {
-  const url = document.getElementById('endpointInput').value.trim();
-  if (!url) return;
-  localStorage.setItem('gotrack_endpoint', url);
-  fetchData(url);
-}
 
 async function fetchData(endpoint) {
   setConn('loading', '스프레드시트 연결 중...');
@@ -261,13 +225,10 @@ async function fetchData(endpoint) {
 
     LINK_DATA = data;
     setConn('ok', LINK_DATA.length + '개 계약서 연동됨');
-    document.getElementById('connAction').textContent = '재설정';
-    hideSetup();
     document.getElementById('mainContent').classList.remove('hidden');
     render();
   } catch (e) {
-    setConn('err', '연결 실패: ' + e.message);
-    showSetup();
+    setConn('err', '연결 실패 — Admin 설정에서 엔드포인트를 확인해 주세요');
   }
 }
 
@@ -298,12 +259,40 @@ function setCat(key, el) {
   render();
 }
 
+// ========== Current Version Detection ==========
+// 코드 접두사 추출: "F53F" → "F53", "E03B" → "E03", "G01" → "G01"
+function codePrefix(code) {
+  const m = code.match(/^([A-Z]\d+)/i);
+  return m ? m[1].toUpperCase() : code.toUpperCase();
+}
+// 코드 접미 알파벳 추출: "F53F" → "F", "E03B" → "B", "G01" → ""
+function codeSuffix(code) {
+  const m = code.match(/^[A-Z]\d+([A-Z])$/i);
+  return m ? m[1].toUpperCase() : '';
+}
+
+// LINK_DATA 기반으로 같은 접두사 그룹 내 최신 알파벳만 현행으로 판별
+function buildCurrentSet() {
+  const groups = {}; // prefix → highest suffix code
+  LINK_DATA.forEach(d => {
+    const code = (d.current || d.base).toUpperCase();
+    const pfx = codePrefix(code);
+    const sfx = codeSuffix(code);
+    if (!groups[pfx] || sfx > (codeSuffix(groups[pfx]) || '')) {
+      groups[pfx] = code;
+    }
+  });
+  return new Set(Object.values(groups));
+}
+
 // ========== Render ==========
 function render() {
   const list = document.getElementById('list');
   const q = document.getElementById('q').value.trim().toLowerCase();
   const clearBtn = document.getElementById('clearBtn');
   clearBtn.classList.toggle('show', q.length > 0);
+
+  const currentSet = buildCurrentSet();
 
   let html = '';
   let count = 0;
@@ -315,7 +304,10 @@ function render() {
     const qMatch = !q || terms.includes(q);
     const visible = catMatch && qMatch;
 
-    if (!visible) return;
+    const code = (d.current || d.base).toUpperCase();
+    const isCurrent = currentSet.has(code);
+
+    if (!visible || !isCurrent) return;
     count++;
 
     const revised = d.base !== d.current;
@@ -328,10 +320,7 @@ function render() {
       html += `<span class="r-current">${esc(d.current)}</span>`;
     }
     html += `<span class="r-name">${esc(d.title)}</span>`;
-    if (revised) {
-      html += `<span class="r-badge">현행</span>`;
-    } else {
-      html += `<span class="r-norev">단일</span>`;
+    html += `<span class="r-badge">현행</span>`;
     }
     if (hasUrl) {
       html += `<a class="r-open" href="${esc(d.url)}" target="_blank" rel="noopener">열기</a>`;
@@ -364,6 +353,7 @@ function copyScript(btn) {
   });
 }
 </script>
+<script src="usage-tracker.js"></script>
 <script src="auth-gate.js"></script>
 </body>
 </html>

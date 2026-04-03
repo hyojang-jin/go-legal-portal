@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Go Legal Portal — Admin</title>
+<title>Gowid Legal Portal — Admin v1</title>
 <style>
   :root{--bg:#0f0f14;--card:#1a1a24;--card-hover:#22223a;--accent:#ff6b6b;--accent-dim:rgba(255,107,107,.10);--green:#6ec8a0;--green-dim:rgba(110,200,160,.12);--blue:#74c0fc;--blue-dim:rgba(116,192,252,.1);--orange:#e8a04c;--orange-dim:rgba(232,160,76,.12);--purple:#7c8cf0;--purple-dim:rgba(124,140,240,.12);--yellow:#ffd43b;--red:#ff6b6b;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
   *{margin:0;padding:0;box-sizing:border-box}
@@ -174,15 +174,15 @@
 <body>
 
 <nav class="top-nav">
-  <a class="nav-home" href="index.html">&#x2190; Go Legal Portal</a>
+  <a class="nav-home" href="gowid-legal-portal.html">&#x2190; Gowid Legal Portal</a>
   <div class="nav-right">
-    <span class="nav-badge"><span class="dot"></span>Admin</span>
+    <span class="nav-badge"><span class="dot"></span>Admin v1</span>
   </div>
 </nav>
 
 <div class="hero">
   <div class="logo">
-    <span class="go">Go</span><span style="color:var(--t50)"> Legal</span><span class="admin"> Admin</span>
+    <span class="go">Gowid</span><span style="color:var(--t50)"> Legal</span><span class="admin"> Admin</span>
   </div>
   <p class="tagline">포탈 관리 &middot; 설정 &middot; 데이터 도구</p>
 </div>
@@ -204,6 +204,31 @@
     <div class="dash-card"><div class="dash-num green" id="dGodropToday">0</div><div class="dash-label">오늘 투입</div></div>
     <div class="dash-card"><div class="dash-num blue" id="dGodropSize">0</div><div class="dash-label">총 용량</div></div>
     <div class="dash-card"><div class="dash-num red" id="dParseCount">0</div><div class="dash-label">선례 DB (파싱)</div></div>
+  </div>
+
+  <!-- Usage Dashboard -->
+  <div class="health-section" style="margin-top:28px">
+    <div class="health-title">&#x1F4C8; 도구별 활용 현황</div>
+
+    <!-- Period selector -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="filter-pill active" onclick="setUsagePeriod('7d',this)">최근 7일</button>
+      <button class="filter-pill" onclick="setUsagePeriod('30d',this)">최근 30일</button>
+      <button class="filter-pill" onclick="setUsagePeriod('all',this)">전체</button>
+      <button class="filter-pill" onclick="clearUsageLog()" style="margin-left:auto;border-color:rgba(255,107,107,.2);color:var(--red)">로그 초기화</button>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="dash-grid" id="usageSummary" style="margin-bottom:16px"></div>
+
+    <!-- Bar chart -->
+    <div id="usageChart" style="background:var(--card);border:1px solid var(--t08);border-radius:10px;padding:20px"></div>
+
+    <!-- Recent activity -->
+    <div style="margin-top:16px">
+      <div style="font-size:13px;font-weight:600;color:var(--t80);margin-bottom:10px">최근 활동</div>
+      <div id="usageRecent" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto"></div>
+    </div>
   </div>
 
   <div class="health-section">
@@ -271,7 +296,7 @@
     <div class="setting-row">
       <div class="sr-info">
         <div class="sr-label">계약서 조회 Endpoint</div>
-        <div class="sr-desc">GoTrack Lookup에서 사용하는 Google Apps Script URL</div>
+        <div class="sr-desc">GoTrack Live에서 사용하는 Google Apps Script URL</div>
       </div>
       <div class="sr-input-wrap">
         <input class="sr-input" id="cfgTrackEndpoint" placeholder="https://script.google.com/macros/s/...">
@@ -400,7 +425,7 @@
 </div>
 
 <div class="footer">
-  Go Legal Portal &middot; Admin &middot; 2026<br>
+  Gowid Legal Portal &middot; Admin v1 &middot; 2026<br>
   법무팀 관리자 전용
 </div>
 
@@ -463,7 +488,7 @@ function refreshDashboard() {
     { name: 'Gemini API Key (공용)', key: 'gowid_gemini_key', fallback: '' },
     { name: 'Slack Bot Token', key: 'gowid_slack_bot_token', fallback: 'xoxb-523970022560-10596436186850-EHekobiznpnPYAfU84wCUfgs' },
     { name: 'Slack User ID', key: 'gowid_slack_user_id', fallback: 'U080B5UD7RA' },
-    { name: 'GoTrack 조회 Endpoint', key: 'gotrack_endpoint', fallback: 'https://script.google.com/macros/s/AKfycbwMZMDfC7-2OOc7RcJz8t5keKMW2J0jES6H62YrVIf-URZ1BxbFU1rXYf_WFaXN9Podow/exec' },
+    { name: 'GoTrack Live Endpoint', key: 'gotrack_endpoint', fallback: 'https://script.google.com/macros/s/AKfycbwMZMDfC7-2OOc7RcJz8t5keKMW2J0jES6H62YrVIf-URZ1BxbFU1rXYf_WFaXN9Podow/exec' },
     { name: 'GoTrack 생성 Endpoint', key: 'gotrack_gen_endpoint', fallback: 'https://script.google.com/macros/s/AKfycbwMZMDfC7-2OOc7RcJz8t5keKMW2J0jES6H62YrVIf-URZ1BxbFU1rXYf_WFaXN9Podow/exec' },
     { name: 'GoTrack Gemini Key', key: 'gotrack_gemini_key', fallback: localStorage.getItem('gowid_gemini_key') || '' },
   ];
@@ -635,6 +660,7 @@ function renderArchiveItem(a) {
         ${a.summary ? `<div style="font-size:11px;color:var(--t30);margin-top:1px">${esc(a.summary)}</div>` : ''}
         <div class="ar-meta">
           <span class="ar-id">${a.id}</span>
+          ${a.submitter ? `<span>&#x1F464; ${esc(a.submitter)}</span>` : ''}
           <span>${formatSize(a.size)}</span>
           <span>${a.dateStr || ''}</span>
         </div>
@@ -797,8 +823,8 @@ document.getElementById('btnArchiveClear').addEventListener('click', async () =>
 
 document.getElementById('btnArchiveExport').addEventListener('click', () => {
   if (gdArchive.length === 0) return alert('내보낼 데이터가 없습니다.');
-  const header = ['ID','파일명','문서유형','서명유형','부서','상대방','제목','요약','크기','일시'].join('\t');
-  const rows = gdArchive.map(a => [a.id, a.name, a.docType||'', a.signType||'', a.department||'', a.counterparty||'', a.title||'', a.summary||'', formatSize(a.size), a.dateStr||''].join('\t'));
+  const header = ['ID','파일명','투입자','문서유형','서명유형','부서','상대방','제목','요약','크기','일시'].join('\t');
+  const rows = gdArchive.map(a => [a.id, a.name, a.submitter||'', a.docType||'', a.signType||'', a.department||'', a.counterparty||'', a.title||'', a.summary||'', formatSize(a.size), a.dateStr||''].join('\t'));
   const blob = new Blob(['\uFEFF' + [header,...rows].join('\n')], {type:'text/tab-separated-values;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -829,10 +855,133 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s; re
 /* ═══════════════════════════════════════
    Init
    ═══════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Usage Dashboard
+   ═══════════════════════════════════════ */
+const USAGE_KEY = 'gowid_usage_log';
+let usagePeriod = '7d';
+
+const TOOL_META = {
+  'Portal':         { label: 'Portal',         color: '#6ec8a0', icon: '&#x1F3E0;' },
+  'Gommon Sense':   { label: 'Gommon Sense',    color: '#7c8cf0', icon: '&#x26A1;' },
+  'Go_track':       { label: 'Go_track',        color: '#6ec8a0', icon: '&#x1F4CB;' },
+  'Go_track Live':  { label: 'Go_track Live',   color: '#74c0fc', icon: '&#x1F50D;' },
+  'GoDrop':         { label: 'GoDrop',          color: '#e8a04c', icon: '&#x1F4E5;' },
+};
+
+const ACTION_LABEL = {
+  'visit': '페이지 방문',
+  'risk-scan': '리스크 체크',
+  'review-scan': '1차 법률검토',
+  'track-scan': '변경 이력 분석',
+  'drop-submit': '서류 투입',
+};
+
+function getUsageLog() {
+  try { return JSON.parse(localStorage.getItem(USAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function filterByPeriod(log, period) {
+  if (period === 'all') return log;
+  const now = Date.now();
+  const days = period === '7d' ? 7 : 30;
+  const cutoff = now - days * 86400000;
+  return log.filter(e => new Date(e.ts).getTime() >= cutoff);
+}
+
+function setUsagePeriod(p, btn) {
+  usagePeriod = p;
+  document.querySelectorAll('.health-section .filter-pill').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderUsageDashboard();
+}
+
+function clearUsageLog() {
+  if (!confirm('활용 로그를 모두 삭제하시겠습니까?')) return;
+  localStorage.removeItem(USAGE_KEY);
+  renderUsageDashboard();
+}
+
+function renderUsageDashboard() {
+  const allLog = getUsageLog();
+  const log = filterByPeriod(allLog, usagePeriod);
+
+  // ── Summary cards ──
+  const totalVisits = log.filter(e => e.action === 'visit').length;
+  const totalActions = log.filter(e => e.action !== 'visit').length;
+  const toolVisits = {};
+  log.forEach(e => { if (e.action === 'visit' && e.tool !== 'Portal') toolVisits[e.tool] = (toolVisits[e.tool]||0) + 1; });
+  const topTool = Object.entries(toolVisits).sort((a,b) => b[1]-a[1])[0];
+
+  // Unique days
+  const days = new Set(log.map(e => e.ts?.substring(0,10))).size;
+
+  document.getElementById('usageSummary').innerHTML = `
+    <div class="dash-card"><div class="dash-num green">${totalVisits}</div><div class="dash-label">페이지 방문</div></div>
+    <div class="dash-card"><div class="dash-num blue">${totalActions}</div><div class="dash-label">분석/투입 실행</div></div>
+    <div class="dash-card"><div class="dash-num orange">${days}</div><div class="dash-label">활동일 수</div></div>
+    <div class="dash-card"><div class="dash-num red">${topTool ? esc(topTool[0]) : '-'}</div><div class="dash-label">가장 많이 사용</div></div>
+  `;
+
+  // ── Bar chart ──
+  const toolNames = ['Gommon Sense', 'Go_track', 'Go_track Live', 'GoDrop'];
+  const visitCounts = toolNames.map(t => log.filter(e => e.tool === t && e.action === 'visit').length);
+  const actionCounts = toolNames.map(t => log.filter(e => e.tool === t && e.action !== 'visit').length);
+  const maxVal = Math.max(...visitCounts, ...actionCounts, 1);
+
+  let chartHtml = '<div style="font-size:12px;font-weight:600;color:var(--t80);margin-bottom:14px">도구별 사용 횟수</div>';
+  toolNames.forEach((t, i) => {
+    const meta = TOOL_META[t] || { color: '#888', icon: '' };
+    const vw = Math.max((visitCounts[i] / maxVal) * 100, 0);
+    const aw = Math.max((actionCounts[i] / maxVal) * 100, 0);
+    chartHtml += `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:14px">${meta.icon}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--t80);min-width:110px">${esc(meta.label)}</span>
+          <span style="font-size:11px;color:var(--t30)">${visitCounts[i]}회 방문 · ${actionCounts[i]}회 실행</span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <div style="flex:1;height:8px;background:var(--t08);border-radius:4px;overflow:hidden">
+            <div style="width:${vw}%;height:100%;background:${meta.color};border-radius:4px;opacity:.5;transition:width .4s"></div>
+          </div>
+          <div style="flex:1;height:8px;background:var(--t08);border-radius:4px;overflow:hidden">
+            <div style="width:${aw}%;height:100%;background:${meta.color};border-radius:4px;transition:width .4s"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;font-size:9px;color:var(--t30);margin-top:2px">
+          <span style="flex:1">방문</span><span style="flex:1">실행</span>
+        </div>
+      </div>`;
+  });
+  document.getElementById('usageChart').innerHTML = chartHtml;
+
+  // ── Recent activity ──
+  const recent = log.slice(-30).reverse();
+  const $recent = document.getElementById('usageRecent');
+  if (recent.length === 0) {
+    $recent.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t30);font-size:13px">활동 기록이 없습니다</div>';
+    return;
+  }
+  $recent.innerHTML = recent.map(e => {
+    const meta = TOOL_META[e.tool] || { color: '#888', icon: '&#x1F4C4;' };
+    const actionLabel = ACTION_LABEL[e.action] || e.action;
+    const time = e.ts ? new Date(e.ts).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--card);border:1px solid var(--t08);border-radius:8px;font-size:12px">
+      <span style="font-size:14px">${meta.icon}</span>
+      <span style="font-weight:600;color:${meta.color};min-width:100px">${esc(meta.label)}</span>
+      <span style="color:var(--t60);flex:1">${esc(actionLabel)}</span>
+      <span style="color:var(--t30);font-size:11px;font-family:'SF Mono',Consolas,monospace">${esc(time)}</span>
+    </div>`;
+  }).join('');
+}
+
 refreshDashboard();
 loadSettings();
 renderArchive();
+renderUsageDashboard();
 </script>
-<script src="auth-gate.js"></script>
+<script src="auth-admin.js"></script>
 </body>
 </html>

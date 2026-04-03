@@ -11,13 +11,13 @@
 
   /* Hero */
   .hero{text-align:center;padding:60px 20px 40px}
-  .hero .logo{font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
-  .hero .logo .go{color:var(--green)}
-  .hero .logo .legal{color:var(--t50)}
-  .hero .logo .portal{color:var(--t30);font-weight:400;font-size:28px;margin-left:4px}
-  .hero .logo .ver-tag{font-size:12px;font-weight:600;color:var(--green);background:rgba(110,200,160,.12);padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle}
+  .hero .logo{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:6px}
+  .hero .logo img{height:28px;margin-right:2px}
+  .hero .logo .legal{font-size:32px;font-weight:800;letter-spacing:-1px;color:var(--t50)}
+  .hero .logo .portal{font-size:24px;font-weight:400;color:var(--t30);margin-left:6px}
+  .hero .logo .ver-tag{font-size:10px;font-weight:600;color:var(--green);background:rgba(110,200,160,.12);padding:2px 7px;border-radius:5px;margin-left:8px}
   .hero .tagline{font-size:16px;color:var(--t60);margin-bottom:8px}
-  .hero .sub{font-size:13px;color:var(--t30);max-width:520px;margin:0 auto;line-height:1.8}
+  .hero .sub{font-size:13px;color:var(--t30);max-width:520px;margin:0 auto;line-height:2}
 
   /* Grid */
   .wrap{max-width:840px;margin:0 auto;padding:0 20px 40px}
@@ -71,8 +71,9 @@
 
   @media(max-width:640px){
     .hero{padding:40px 16px 24px}
-    .hero .logo{font-size:28px}
-    .hero .logo .portal{font-size:22px}
+    .hero .logo img{height:22px}
+    .hero .logo .legal{font-size:24px}
+    .hero .logo .portal{font-size:18px}
     .grid{grid-template-columns:1fr;gap:12px}
     .wrap{padding:0 12px 24px}
     .tc-desc{min-height:auto}
@@ -83,29 +84,31 @@
 
 <div class="hero">
   <div class="logo">
-    <span class="go">Gowid</span><span class="legal"> Legal</span><span class="portal"> Portal</span><span class="ver-tag">v1</span>
+    <img src="gowid-logo-dark.png" alt="gowid"><span class="legal"> Legal</span><span class="portal"> Portal</span><span class="ver-tag">v1</span>
   </div>
   <p class="tagline">고위드 법무 도구 모음</p>
-  <p class="sub">법무 리스크 체크부터 계약서 변경 이력 확인, 현행 계약서 조회, 자동 생성까지.<br>비법무 실무자도 쉽게 사용할 수 있는 법무 셀프서비스 플랫폼.</p>
+  <p class="sub">법무 리스크 체크부터 계약서 변경 이력 확인, 현행 계약서 조회까지.<br>비법무 실무자도 쉽게 사용할 수 있는 법무 셀프서비스 플랫폼.</p>
 </div>
 
 <div class="wrap">
   <div class="grid">
 
     <!-- Gommon Sense -->
-    <a class="tool-card purple" href="gommon-sense-v5.0.html">
+    <a class="tool-card purple" href="gommon-sense-v1.0.html">
       <div class="tc-header">
         <div class="tc-icon">&#x26A1;</div>
-        <div class="tc-title">Gommon Sense<span class="tc-ver">v5.0</span></div>
+        <div class="tc-title">Gommon Sense<span class="tc-ver">v1.0</span></div>
       </div>
       <div class="tc-desc">
-        엘박스·슈퍼로이어 선례 기본 탑재. 리스크 체크 + 문서 붙여넣기 1차 법률검토까지 한번에.
+        고위드 법무 검토 선례 기본 탑재.<br>
+        리스크 체크 + 문서 붙여넣기<br>
+        1차 법률검토까지 한번에.
       </div>
       <div class="tc-features">
         <span class="tc-feat">AI 리스크 분석</span>
         <span class="tc-feat">1차 법률검토</span>
         <span class="tc-feat">PDF/Word 업로드</span>
-        <span class="tc-feat">엘박스+슈퍼로이어</span>
+        <span class="tc-feat">검토 선례 내장</span>
         <span class="tc-feat">Slack 연동</span>
       </div>
       <div class="tc-arrow">&#x2192;</div>
@@ -118,7 +121,8 @@
         <div class="tc-title">Go_track<span class="tc-ver">v1.0</span></div>
       </div>
       <div class="tc-desc">
-        계약서가 왜, 어떻게 바뀌었는지 AI가 설명합니다. 개정 전/후 대조, 취지, 현업 체크포인트를 한눈에 확인.
+        계약서가 왜, 어떻게 바뀌었는지 AI가 설명합니다.<br>
+        개정 전/후 대조, 취지, 현업 체크포인트를 한눈에.
       </div>
       <div class="tc-features">
         <span class="tc-feat">변경 이력 분석</span>
@@ -135,7 +139,8 @@
         <div class="tc-title">Go_track Live<span class="tc-ver">v1.0</span></div>
       </div>
       <div class="tc-desc">
-        현행 계약서 코드를 빠르게 조회하고, Google Docs 원문을 바로 열 수 있습니다. 스프레드시트와 실시간 연동.
+        현행 계약서를 빠르게 조회하고 Docs 원문을 바로 엽니다.<br>
+        실제 활용 시 사본을 만든 후 보충·제작하세요.
       </div>
       <div class="tc-features">
         <span class="tc-feat">현행 버전 조회</span>
@@ -152,7 +157,8 @@
         <div class="tc-title">GoDrop<span class="tc-ver">v1.0</span></div>
       </div>
       <div class="tc-desc">
-        계약서, 공문, 스캔본을 던져 넣으면 자동으로 아카이빙. 도서관 무인 반납함처럼, 넣기만 하면 끝.
+        계약서, 공문, 스캔본을 던져 넣으면 자동 아카이빙.<br>
+        도서관 무인 반납함처럼, 넣기만 하면 끝.
       </div>
       <div class="tc-features">
         <span class="tc-feat">드래그 &amp; 드롭</span>
@@ -166,8 +172,7 @@
 
   <div class="status-row">
     <div class="status-pill"><span class="s-dot"></span>Gemini 2.5 Flash</div>
-    <div class="status-pill"><span class="s-dot"></span>엘박스 선례 내장</div>
-    <div class="status-pill"><span class="s-dot"></span>슈퍼로이어 선례 내장</div>
+    <div class="status-pill"><span class="s-dot"></span>고위드 법무 검토 선례 내장</div>
     <div class="status-pill"><span class="s-dot"></span>Google Sheets 연동</div>
     <div class="status-pill"><span class="s-dot"></span>Google Docs 연동</div>
   </div>
@@ -175,10 +180,10 @@
 
 <div class="footer">
   Gowid Legal Portal v1 &middot; Gowid Legal Tech &middot; 2026<br>
-  AI 기반 1차 분석 도구 &middot; 최종 판단은 법무팀 검토를 거쳐 주세요<br>
-  <a href="admin.html" style="color:var(--t15);text-decoration:none;font-size:10px;transition:color .2s" onmouseover="this.style.color='var(--t30)'" onmouseout="this.style.color='var(--t15)'">Admin</a>
+  AI 기반 1차 분석 도구 &middot; 최종 판단은 법무팀 검토를 거쳐 주세요
 </div>
 
+<script src="usage-tracker.js"></script>
 <script src="auth-gate.js"></script>
 </body>
 </html>

@@ -3,30 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Go_track Generator — 계약서 자동 생성</title>
+<title>GoVend v1.0 — 계약서 자판기</title>
 <style>
   :root{--bg:#0f0f14;--card:#1a1a24;--accent:#6ec8a0;--accent-dim:rgba(110,200,160,.15);--green:#69db7c;--green-bg:rgba(105,219,124,.10);--yellow:#ffd43b;--yellow-bg:rgba(255,212,59,.10);--red:#ff6b6b;--red-bg:rgba(255,107,107,.08);--blue:#74c0fc;--t50:rgba(255,255,255,.92);--t80:rgba(255,255,255,.7);--t60:rgba(255,255,255,.5);--t30:rgba(255,255,255,.25);--t15:rgba(255,255,255,.12);--t08:rgba(255,255,255,.06);--r:12px}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t50);line-height:1.7;min-height:100vh}
-  .wrap{max-width:680px;margin:0 auto;padding:20px}
+  .wrap{max-width:780px;margin:0 auto;padding:20px}
+  .hidden{display:none!important}
 
-  header{padding:28px 0 20px;text-align:center;border-bottom:1px solid var(--t15)}
+  header{padding:24px 0 16px;text-align:center;border-bottom:1px solid var(--t15)}
   header h1{font-size:22px;font-weight:700;color:var(--t50)}
   header h1 span{color:var(--accent)}
   header .ver{font-size:11px;color:var(--accent);font-weight:600;margin-left:4px;vertical-align:super}
   header p{font-size:12px;color:var(--t60);margin-top:4px}
-  header .sub{font-size:11px;color:var(--t30);margin-top:2px}
 
-  /* Steps indicator */
-  .steps-bar{display:flex;align-items:center;gap:0;margin-top:20px;padding:0 10px}
-  .step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid var(--t15);color:var(--t30);flex-shrink:0;transition:all .3s}
-  .step-dot.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
-  .step-dot.done{border-color:var(--green);color:var(--green);background:var(--green-bg)}
-  .step-line{flex:1;height:2px;background:var(--t15);transition:background .3s}
-  .step-line.done{background:var(--green)}
-  .step-labels{display:flex;justify-content:space-between;padding:6px 0 0;font-size:11px;color:var(--t30)}
-  .step-labels span{text-align:center;flex:1}
-  .step-labels span.active{color:var(--accent);font-weight:600}
+  /* Top Nav */
+  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(15,15,20,.95);border-bottom:1px solid var(--t08);position:sticky;top:0;z-index:200;backdrop-filter:blur(8px)}
+  .top-nav .nav-home{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t60);text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent}
+  .top-nav .nav-home:hover{color:var(--t50);background:var(--t08);border-color:var(--t15)}
+  .top-nav .nav-title{font-size:13px;color:var(--t80);font-weight:600;cursor:pointer;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent;user-select:none}
+  .top-nav .nav-title:hover{color:var(--accent);background:var(--accent-dim);border-color:rgba(110,200,160,.2)}
+  .top-nav .nav-title .nav-ver{font-size:10px;color:var(--accent);font-weight:600;margin-left:4px}
 
   /* Connection bar */
   .conn-bar{margin-top:16px;padding:10px 16px;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:8px}
@@ -55,14 +52,11 @@
   .url-row input{flex:1;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:13px;font-family:inherit;background:var(--t08);color:var(--t50)}
   .url-row input:focus{outline:none;border-color:var(--accent)}
   .url-row button{padding:10px 18px;background:var(--accent);border:none;border-radius:8px;font-size:13px;font-weight:600;color:#111;cursor:pointer;white-space:nowrap;font-family:inherit}
-  .hidden{display:none!important}
 
-  /* Cards */
+  /* Card / Contract selector */
   .card{background:var(--card);border:1px solid var(--t15);border-radius:var(--r);padding:24px;margin-top:16px}
   .card h3{font-size:15px;font-weight:600;margin-bottom:4px;color:var(--t50)}
   .card .card-hint{font-size:12px;color:var(--t60);margin-bottom:16px}
-
-  /* Contract selector */
   .contract-search{width:100%;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:14px;font-family:inherit;background:var(--t08);color:var(--t50);margin-bottom:8px}
   .contract-search:focus{outline:none;border-color:var(--accent)}
   .contract-search::placeholder{color:var(--t30)}
@@ -79,97 +73,72 @@
   .cl-item.cli-hidden{display:none}
   .cl-empty{padding:20px;text-align:center;font-size:12px;color:var(--t30)}
 
-  /* Selected contract display */
-  .selected-contract{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;margin-bottom:16px}
-  .selected-contract .sc-code{font-size:14px;font-weight:700;color:var(--accent);font-family:'SF Mono','Consolas',monospace}
-  .selected-contract .sc-name{font-size:13px;color:var(--t80);flex:1}
-  .selected-contract .sc-change{font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline;flex-shrink:0}
-
-  /* Form */
-  .form-section{margin-top:4px}
-  .form-group{margin-bottom:14px}
-  .form-group label{display:block;font-size:12px;font-weight:600;color:var(--t60);margin-bottom:4px}
-  .form-group label .req{color:var(--red);margin-left:2px}
-  .form-group input,.form-group select{width:100%;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:14px;font-family:inherit;background:var(--t08);color:var(--t50);transition:border-color .2s}
-  .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--accent)}
-  .form-group input::placeholder{color:var(--t30)}
-  .form-group select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
-  .form-group select option{background:var(--card);color:var(--t50)}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .form-divider{border:none;border-top:1px solid var(--t08);margin:18px 0}
-  .form-section-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);font-weight:600;margin-bottom:12px}
-
   /* Buttons */
   .btn-primary{width:100%;padding:14px;background:var(--accent);color:#111;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.3px;font-family:inherit}
   .btn-primary:hover{opacity:.9;box-shadow:0 0 20px rgba(110,200,160,.3)}
   .btn-primary:disabled{background:var(--t15);color:var(--t30);cursor:not-allowed;box-shadow:none}
-  .btn-row{display:flex;gap:10px;margin-top:16px}
-  .btn-secondary{flex:1;padding:12px;background:var(--t08);color:var(--t60);border:1px solid var(--t15);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+  .btn-secondary{padding:8px 16px;background:var(--t08);color:var(--t60);border:1px solid var(--t15);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
   .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
-  .btn-download{flex:2;padding:12px;background:var(--accent);color:#111;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
-  .btn-download:hover{opacity:.9;box-shadow:0 0 20px rgba(110,200,160,.3)}
 
-  /* Preview */
-  .preview-info{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
-  .preview-row{display:flex;gap:8px;font-size:13px}
-  .preview-row .pr-label{color:var(--t30);min-width:100px;flex-shrink:0}
-  .preview-row .pr-value{color:var(--t80);font-weight:500}
+  /* ===== Live Document Editor ===== */
+  .editor-toolbar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--card);border:1px solid var(--t15);border-radius:var(--r);margin-top:16px;flex-wrap:wrap}
+  .et-info{flex:1;font-size:13px;color:var(--t60);min-width:120px}
+  .et-code{font-weight:700;color:var(--accent);font-family:'SF Mono','Consolas',monospace;margin-right:6px}
+  .et-count{font-size:11px;color:var(--t30);margin-left:8px}
+  .et-count strong{color:var(--accent)}
+
+  .live-doc{background:#fff;color:#222;padding:48px 52px;border-radius:10px;margin-top:12px;box-shadow:0 2px 24px rgba(0,0,0,.4);line-height:2;font-size:14px;overflow-x:auto;position:relative;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+  .live-doc p{margin:0;min-height:1.2em;word-break:keep-all}
+
+  .inline-blank{border:none;border-bottom:2.5px solid var(--accent);background:rgba(110,200,160,.10);color:#222;font-family:inherit;font-size:inherit;line-height:1.4;padding:2px 6px;min-width:80px;outline:none;transition:all .2s;border-radius:3px 3px 0 0;vertical-align:baseline}
+  .inline-blank:focus{border-bottom-color:#7c8cf0;background:rgba(124,140,240,.12);box-shadow:0 3px 12px rgba(124,140,240,.15)}
+  .inline-blank::placeholder{color:#aaa;font-style:italic;font-size:0.9em}
+  .inline-blank.filled{background:rgba(110,200,160,.08);border-bottom-color:var(--green)}
+  .inline-blank.error{border-bottom-color:var(--red);background:rgba(255,107,107,.08)}
+
+  .bottom-bar{position:sticky;bottom:0;padding:20px 0 8px;background:linear-gradient(transparent 0%,var(--bg) 40%);text-align:center;margin-top:12px}
+  .bottom-bar .btn-primary{max-width:360px;margin:0 auto;display:block;font-size:17px;padding:16px}
 
   /* Result */
-  .result-card{background:linear-gradient(135deg,var(--card) 0%,rgba(110,200,160,.08) 100%);border:1px solid var(--accent);border-radius:var(--r);padding:24px;margin-top:16px;text-align:center}
-  .result-card .rc-icon{font-size:32px;margin-bottom:8px}
+  .result-card{background:linear-gradient(135deg,var(--card) 0%,rgba(110,200,160,.08) 100%);border:1px solid var(--accent);border-radius:var(--r);padding:28px;margin-top:16px;text-align:center}
+  .result-card .rc-icon{font-size:36px;margin-bottom:8px}
   .result-card h3{font-size:18px;font-weight:700;color:var(--t50);margin-bottom:4px}
   .result-card p{font-size:13px;color:var(--t60);margin-bottom:16px}
+  .btn-download{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:14px 32px;background:var(--accent);color:#111;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;text-decoration:none}
+  .btn-download:hover{opacity:.9;box-shadow:0 0 20px rgba(110,200,160,.3)}
+  .btn-row{display:flex;gap:10px;margin-top:12px;justify-content:center}
 
-  /* Loading overlay */
-  .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,15,20,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+  /* Loading / Error */
+  .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,15,20,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:300}
   .spinner{width:40px;height:40px;border:3px solid var(--t15);border-top:3px solid var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
   @keyframes spin{to{transform:rotate(360deg)}}
   .loading-overlay p{font-size:14px;color:var(--t60)}
   .loading-overlay .loading-sub{font-size:12px;color:var(--t30);margin-top:4px}
-
   .error-box{margin-top:16px;padding:14px 18px;background:var(--red-bg);border:1px solid rgba(255,107,107,.25);border-radius:var(--r);font-size:13px;color:var(--red)}
 
   .footer{margin-top:24px;text-align:center;font-size:11px;color:var(--t30);line-height:1.6}
   .footer a{color:var(--accent);text-decoration:none}
   .disclaimer{margin-top:16px;font-size:11px;color:var(--t30);text-align:center;line-height:1.6}
 
-  /* Top Nav */
-  .top-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(15,15,20,.95);border-bottom:1px solid var(--t08);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
-  .top-nav .nav-home{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t60);text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent}
-  .top-nav .nav-home:hover{color:var(--t50);background:var(--t08);border-color:var(--t15)}
-  .top-nav .nav-title{font-size:13px;color:var(--t80);font-weight:600;cursor:pointer;padding:6px 12px;border-radius:6px;transition:all .15s;border:1px solid transparent;user-select:none}
-  .top-nav .nav-title:hover{color:var(--accent);background:var(--accent-dim);border-color:rgba(110,200,160,.2)}
-  .top-nav .nav-title .nav-ver{font-size:10px;color:var(--accent);font-weight:600;margin-left:4px}
-
-  @media(max-width:600px){.wrap{padding:12px}.card{padding:18px}.form-row{grid-template-columns:1fr}.url-row{flex-direction:column}.btn-row{flex-direction:column}.btn-download,.btn-secondary{flex:none}}
+  @media(max-width:600px){
+    .wrap{padding:12px}
+    .card{padding:18px}
+    .live-doc{padding:24px 20px;font-size:12.5px}
+    .editor-toolbar{gap:6px}
+    .url-row{flex-direction:column}
+  }
 </style>
 </head>
 <body>
 <nav class="top-nav">
   <a class="nav-home" href="index.html">&#x2190; Go Legal Portal</a>
-  <span class="nav-title" onclick="resetAll()">Go_track<span class="nav-ver">Generator</span></span>
+  <span class="nav-title" onclick="resetAll()">GoVend<span class="nav-ver">v1.0</span></span>
 </nav>
 <header>
-  <h1><span>Go</span>_track <span class="ver">Generator</span></h1>
-  <p>표준 계약서 자동 생성 &middot; 법인정보 입력 → PDF 추출</p>
-  <div class="sub">Gommon Sense Spin-off &middot; 휴먼에러 방지 &middot; 표준 양식 유지</div>
+  <h1><span>Go</span>Vend <span class="ver">v1.0</span></h1>
+  <p>계약서 자판기 &middot; 보면서 채우고 PDF로 출력</p>
 </header>
 <div class="wrap">
-
-  <!-- Steps -->
-  <div class="steps-bar" id="stepsBar">
-    <div class="step-dot active" id="sd1">1</div>
-    <div class="step-line" id="sl1"></div>
-    <div class="step-dot" id="sd2">2</div>
-    <div class="step-line" id="sl2"></div>
-    <div class="step-dot" id="sd3">3</div>
-  </div>
-  <div class="step-labels">
-    <span class="active" id="slbl1">계약서 선택</span>
-    <span id="slbl2">공란 채우기</span>
-    <span id="slbl3">확인 & 생성</span>
-  </div>
 
   <!-- Connection -->
   <div class="conn-bar loading" id="connBar">
@@ -180,101 +149,74 @@
 
   <!-- Setup -->
   <div class="setup-card hidden" id="setupCard">
-    <h3>Google Sheets & Docs 연동 설정</h3>
-    <p>스프레드시트에서 계약서 템플릿을 불러오고, 법인정보를 채워 PDF로 생성합니다. 최초 1회 설정이 필요합니다.</p>
-
+    <h3>Google Sheets &amp; Docs 연동 설정</h3>
+    <p>스프레드시트에서 계약서 템플릿을 불러오고, 공란을 채워 PDF로 생성합니다. 최초 1회 설정이 필요합니다.</p>
     <div class="step-guide" data-n="1">스프레드시트에서 <code>확장 프로그램</code> → <code>Apps Script</code></div>
     <div class="step-guide" data-n="2">기존 코드를 지우고 아래 스크립트를 붙여넣은 후 저장</div>
-
     <div class="script-box">
       <button class="copy-script" onclick="copyScript(this)">복사</button>
       <pre id="scriptCode"></pre>
     </div>
-
     <div class="step-guide" data-n="3"><code>배포</code> → <code>새 배포</code> → 유형: <code>웹 앱</code> → 액세스: <code>모든 사용자</code> → 배포</div>
     <div class="step-guide" data-n="4">생성된 URL을 아래에 붙여넣기</div>
-
     <div class="url-row">
       <input type="text" id="endpointInput" placeholder="https://script.google.com/macros/s/.../exec">
       <button onclick="saveEndpoint()">연결</button>
     </div>
   </div>
 
-  <!-- ===== STEP 1: Contract Selection ===== -->
-  <div class="card" id="step1Card">
+  <!-- ===== Contract Selection ===== -->
+  <div class="card" id="selectCard">
     <h3>계약서 선택</h3>
-    <p class="card-hint">생성할 표준 계약서를 선택하세요</p>
+    <p class="card-hint">공란을 채울 계약서를 선택하세요</p>
     <input type="text" class="contract-search" id="contractSearch" placeholder="코드 또는 이름으로 검색..." oninput="filterContracts()">
     <div class="contract-list" id="contractList">
       <div class="cl-empty">연동 후 계약서 목록이 표시됩니다</div>
     </div>
-    <button class="btn-primary" id="btnStep1" style="margin-top:16px" onclick="goStep2()" disabled>다음: 법인정보 입력</button>
+    <button class="btn-primary" id="btnOpen" style="margin-top:16px" onclick="openContract()" disabled>열기</button>
   </div>
 
-  <!-- ===== STEP 2: AI-detected Fields ===== -->
-  <div class="card hidden" id="step2Card">
-    <div class="selected-contract" id="selectedDisplay"></div>
+  <!-- ===== Scanning ===== -->
+  <div class="hidden" id="scanningCard" style="text-align:center;padding:48px 0">
+    <div class="spinner" style="margin:0 auto 12px"></div>
+    <p style="font-size:14px;color:var(--t60)" id="scanMsg">계약서를 불러오고 있습니다...</p>
+  </div>
 
-    <!-- Scanning state -->
-    <div id="scanningState" class="hidden" style="text-align:center;padding:32px 0">
-      <div class="spinner" style="margin:0 auto 12px"></div>
-      <p style="font-size:14px;color:var(--t60)">템플릿을 분석하고 있습니다</p>
-      <p style="font-size:12px;color:var(--t30);margin-top:4px" id="scanStatus">문서 텍스트 추출 중...</p>
-    </div>
-
-    <!-- Dynamic form (built by AI) -->
-    <div id="dynamicForm" class="hidden">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <span style="font-size:14px">&#x1F916;</span>
-        <span style="font-size:13px;color:var(--t60)">AI가 감지한 공란 <strong id="fieldCount" style="color:var(--accent)">0</strong>개</span>
-        <button class="btn-secondary" style="flex:none;padding:5px 12px;font-size:11px;margin-left:auto" onclick="rescanTemplate()">다시 스캔</button>
+  <!-- ===== Live Editor ===== -->
+  <div class="hidden" id="editorArea">
+    <div class="editor-toolbar">
+      <div class="et-info">
+        <span class="et-code" id="etCode"></span><span id="etName"></span>
+        <span class="et-count">공란 <strong id="etFieldCount">0</strong>개</span>
       </div>
-      <div class="form-section" id="dynamicFields"></div>
+      <button class="btn-secondary" style="font-size:11px;padding:6px 12px" onclick="goBack()">다른 계약서</button>
+      <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="generatePdf()">PDF 출력</button>
     </div>
-
-    <!-- Scan error -->
-    <div id="scanError" class="hidden"></div>
-
-    <div class="btn-row" id="step2Buttons" class="hidden">
-      <button class="btn-secondary" onclick="goStep1()">이전</button>
-      <button class="btn-primary" style="flex:2" id="btnStep2" onclick="goStep3()">다음: 확인 & 생성</button>
-    </div>
-  </div>
-
-  <!-- ===== STEP 3: Preview & Generate ===== -->
-  <div class="card hidden" id="step3Card">
-    <h3>입력 정보 확인</h3>
-    <p class="card-hint">아래 내용으로 계약서를 생성합니다. 확인 후 생성 버튼을 누르세요.</p>
-
-    <div class="preview-info" id="previewInfo"></div>
-
-    <button class="btn-primary" id="btnGenerate" onclick="generate()">계약서 생성</button>
-
-    <div class="btn-row" style="margin-top:10px">
-      <button class="btn-secondary" style="flex:1" onclick="goStep2Back()">수정하기</button>
+    <div id="liveDoc" class="live-doc"></div>
+    <div class="bottom-bar">
+      <button class="btn-primary" onclick="generatePdf()">PDF 출력</button>
     </div>
   </div>
 
   <!-- ===== Result ===== -->
   <div class="hidden" id="resultArea"></div>
-
   <div id="errorArea"></div>
 
-  <div class="disclaimer">표준 계약서 양식 기반 자동 생성 &middot; 최종 검토는 법무팀 확인을 거쳐 주세요</div>
+  <div class="disclaimer">표준 계약서 [공란] 기반 자동 생성 &middot; 최종 검토는 법무팀 확인을 거쳐 주세요</div>
   <div class="footer">
-    Go_track Generator &middot; <a href="gotrack-lookup.html">Lookup</a> &middot; <a href="gotrack-v1.0.html">변경 이력</a> &middot; <a href="gommon-sense-v4.0.html">Gommon Sense</a>
+    GoVend v1.0 &middot; <a href="gotrack-lookup.html">Lookup</a> &middot; <a href="gotrack-v1.0.html">변경 이력</a> &middot; <a href="gommon-sense-v5.0.html">Gommon Sense</a>
   </div>
 </div>
 
 <!-- Loading overlay -->
 <div class="loading-overlay hidden" id="loadingOverlay">
   <div class="spinner"></div>
-  <p id="loadingMsg">계약서를 생성하고 있습니다...</p>
-  <div class="loading-sub" id="loadingSub">템플릿 복사 → 법인정보 입력 → PDF 변환</div>
+  <p id="loadingMsg">PDF를 생성하고 있습니다...</p>
+  <div class="loading-sub">사본 생성 → 공란 치환 → PDF 변환</div>
 </div>
 
 <script>
-// ========== Apps Script ==========
+// ========== Apps Script (설정 > 복사용) ==========
 const APPS_SCRIPT = `function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || "list";
 
@@ -327,29 +269,52 @@ function scanTemplate(params) {
 
     var doc = DocumentApp.openById(docId);
     var body = doc.getBody();
-    var fullText = cleanText(body.getText());
+    var fields = [];
+    var seen = {};
 
-    // 테이블 내용도 추출
-    var tables = body.getTables();
-    var tableTexts = [];
-    for (var t = 0; t < tables.length; t++) {
-      var table = tables[t];
-      for (var r = 0; r < table.getNumRows(); r++) {
-        var row = table.getRow(r);
-        var rowTexts = [];
-        for (var c = 0; c < row.getNumCells(); c++) {
-          rowTexts.push(row.getCell(c).getText().trim());
-        }
-        tableTexts.push(rowTexts.join(" | "));
+    function scanTextElem(textElem) {
+      var str = textElem.getText();
+      var i = 0;
+      while (i < str.length) {
+        if (isYellowish(textElem.getBackgroundColor(i))) {
+          var start = i;
+          while (i < str.length && isYellowish(textElem.getBackgroundColor(i))) i++;
+          var label = str.substring(start, i).trim();
+          if (label && !seen[label]) {
+            seen[label] = true;
+            var hasBrackets = (start > 0 && str[start - 1] === "[" && i < str.length && str[i] === "]");
+            var searchText = hasBrackets ? "[" + label + "]" : label;
+            fields.push({ label: label, searchText: searchText });
+          }
+        } else { i++; }
       }
     }
 
-    return jsonResponse({
-      success: true,
-      text: fullText,
-      tableText: cleanText(tableTexts.join("\\n")),
-      title: doc.getName()
-    });
+    function scanElem(elem) {
+      var type = elem.getType();
+      if (type === DocumentApp.ElementType.TEXT) {
+        scanTextElem(elem.asText());
+      } else if (type === DocumentApp.ElementType.TABLE) {
+        var table = elem.asTable();
+        for (var r = 0; r < table.getNumRows(); r++) {
+          var row = table.getRow(r);
+          for (var c = 0; c < row.getNumCells(); c++) {
+            var cell = row.getCell(c);
+            for (var p = 0; p < cell.getNumChildren(); p++) scanElem(cell.getChild(p));
+          }
+        }
+      } else if (elem.getNumChildren) {
+        for (var ch = 0; ch < elem.getNumChildren(); ch++) scanElem(elem.getChild(ch));
+      }
+    }
+
+    for (var i = 0; i < body.getNumChildren(); i++) scanElem(body.getChild(i));
+
+    // 본문 텍스트 추출
+    var fullText = body.getText();
+    var textBase64 = Utilities.base64Encode(Utilities.newBlob(fullText).getBytes());
+
+    return jsonResponse({ success: true, fields: fields, textBase64: textBase64, title: doc.getName() });
   } catch(e) {
     return jsonResponse({error: e.message});
   }
@@ -360,20 +325,16 @@ function generateContract(params) {
     var templateUrl = params.templateUrl;
     if (!templateUrl) return jsonResponse({error: "템플릿 URL이 없습니다"});
 
-    // Google Docs ID 추출
     var docId = extractDocId(templateUrl);
     if (!docId) return jsonResponse({error: "유효한 Google Docs URL이 아닙니다"});
 
-    // 템플릿 복사
     var templateFile = DriveApp.getFileById(docId);
     var companyName = params.company || "표준";
-    var contractCode = params.contractCode || "";
     var newName = templateFile.getName().replace(/\\\\*|\\\\[.*?\\\\]|_?표준/g, "").trim() + "_" + companyName;
     var copy = templateFile.makeCopy(newName);
     var newDoc = DocumentApp.openById(copy.getId());
     var body = newDoc.getBody();
 
-    // 동적 치환 맵 (AI가 감지한 필드)
     var replacements = {};
     if (params.replacements) {
       try {
@@ -384,37 +345,12 @@ function generateContract(params) {
       } catch(e) {}
     }
 
-    // 기존 고정 치환 (폴백)
-    var fixedMap = {
-      "{{회사명}}": companyName,
-      "{{법인명}}": companyName,
-      "{{상호}}": companyName,
-      "{{대표자}}": params.ceo || "",
-      "{{대표자명}}": params.ceo || "",
-      "{{사업자등록번호}}": params.bizNo || "",
-      "{{법인등록번호}}": params.corpNo || "",
-      "{{주소}}": params.address || "",
-      "{{업태}}": params.bizType || "",
-      "{{종목}}": params.bizItem || "",
-      "{{담당자}}": params.contact || "",
-      "{{연락처}}": params.phone || "",
-      "{{계약일}}": params.contractDate || "",
-      "{{계약체결일}}": params.contractDate || "",
-      "{{시작일}}": params.startDate || "",
-      "{{계약시작일}}": params.startDate || "",
-    };
-    for (var fk in fixedMap) {
-      if (!replacements[fk] && fixedMap[fk]) replacements[fk] = fixedMap[fk];
-    }
-
-    // 본문 치환
     for (var key in replacements) {
       if (replacements[key]) {
         body.replaceText(escapeRegex(key), replacements[key]);
       }
     }
 
-    // 헤더/푸터 치환
     var headers = newDoc.getHeader();
     var footers = newDoc.getFooter();
     if (headers) {
@@ -428,26 +364,24 @@ function generateContract(params) {
       }
     }
 
+    clearHighlights(body);
+    if (headers) clearHighlights(headers);
+    if (footers) clearHighlights(footers);
+
     newDoc.saveAndClose();
 
-    // PDF 변환
+    var outFolders = DriveApp.getFoldersByName("GoVend_Output");
+    var outFolder = outFolders.hasNext() ? outFolders.next() : DriveApp.createFolder("GoVend_Output");
+
     var pdfBlob = copy.getAs("application/pdf");
     pdfBlob.setName(newName + ".pdf");
+    var pdfFile = outFolder.createFile(pdfBlob);
 
-    // PDF를 같은 폴더에 저장
-    var parents = templateFile.getParents();
-    var folder = parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
-    var pdfFile = folder.createFile(pdfBlob);
-
-    // 생성된 문서의 권한 설정 (링크가 있는 사용자 보기 가능)
-    try {
-      pdfFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      copy.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    } catch(e) {}
+    try { pdfFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(e) {}
+    try { copy.setTrashed(true); } catch(e) {}
 
     return jsonResponse({
       success: true,
-      docUrl: "https://docs.google.com/document/d/" + copy.getId() + "/edit",
       pdfUrl: "https://drive.google.com/file/d/" + pdfFile.getId() + "/view",
       pdfDownload: "https://drive.google.com/uc?export=download&id=" + pdfFile.getId(),
       fileName: newName
@@ -463,13 +397,43 @@ function extractDocId(url) {
   return m ? m[1] : null;
 }
 
-function cleanText(str) {
-  // JSON을 깨뜨리는 제어문자 제거 (탭/개행은 유지)
-  return str.replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g, "");
-}
-
 function escapeRegex(str) {
   return str.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
+}
+
+function isYellowish(color) {
+  if (!color) return false;
+  color = color.replace("#", "");
+  if (color.length !== 6) return false;
+  var r = parseInt(color.substring(0, 2), 16);
+  var g = parseInt(color.substring(2, 4), 16);
+  var b = parseInt(color.substring(4, 6), 16);
+  return r > 200 && g > 180 && b < 140;
+}
+
+function clearHighlights(elem) {
+  var type = elem.getType();
+  if (type === DocumentApp.ElementType.TEXT) {
+    var text = elem.asText();
+    var str = text.getText();
+    for (var i = 0; i < str.length; i++) {
+      if (isYellowish(text.getBackgroundColor(i))) {
+        text.setBackgroundColor(i, i, null);
+        text.setForegroundColor(i, i, "#000000");
+      }
+    }
+  } else if (type === DocumentApp.ElementType.TABLE) {
+    var table = elem.asTable();
+    for (var r = 0; r < table.getNumRows(); r++) {
+      var row = table.getRow(r);
+      for (var c = 0; c < row.getNumCells(); c++) {
+        var cell = row.getCell(c);
+        for (var p = 0; p < cell.getNumChildren(); p++) clearHighlights(cell.getChild(p));
+      }
+    }
+  } else if (elem.getNumChildren) {
+    for (var ch = 0; ch < elem.getNumChildren(); ch++) clearHighlights(elem.getChild(ch));
+  }
 }
 
 function jsonResponse(data) {
@@ -480,44 +444,35 @@ function jsonResponse(data) {
 
 // ========== Config ==========
 const DEFAULT_GEN_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwMZMDfC7-2OOc7RcJz8t5keKMW2J0jES6H62YrVIf-URZ1BxbFU1rXYf_WFaXN9Podow/exec';
-const GEMINI_KEY_DEFAULT = '';
-const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // ========== State ==========
 let CONTRACTS = [];
 let selectedContract = null;
-let currentStep = 1;
-let detectedFields = []; // AI가 감지한 공란 목록
-let templateText = '';   // 스캔된 템플릿 원문
+let detectedFields = [];
 
 // ========== Init ==========
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('scriptCode').textContent = APPS_SCRIPT;
-
-  const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT || DEFAULT_GEN_ENDPOINT;
+  const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
   fetchContracts(endpoint);
 });
 
 // ========== Connection ==========
 function setConn(state, msg) {
-  const bar = document.getElementById('connBar');
-  bar.className = 'conn-bar ' + state;
+  document.getElementById('connBar').className = 'conn-bar ' + state;
   document.getElementById('connMsg').textContent = msg;
 }
-
 function showSetup() {
   document.getElementById('setupCard').classList.remove('hidden');
   const existing = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
   if (existing) document.getElementById('endpointInput').value = existing;
 }
-
 function saveEndpoint() {
   const url = document.getElementById('endpointInput').value.trim();
   if (!url) return;
   localStorage.setItem('gotrack_gen_endpoint', url);
   fetchContracts(url);
 }
-
 async function fetchContracts(endpoint) {
   setConn('loading', '스프레드시트 연결 중...');
   try {
@@ -525,8 +480,7 @@ async function fetchContracts(endpoint) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-
-    CONTRACTS = data.filter(d => d.url); // URL이 있는 것만
+    CONTRACTS = data.filter(d => d.url);
     setConn('ok', CONTRACTS.length + '개 계약서 템플릿 연동됨');
     document.getElementById('connAction').textContent = '재설정';
     document.getElementById('setupCard').classList.add('hidden');
@@ -537,185 +491,150 @@ async function fetchContracts(endpoint) {
   }
 }
 
-// ========== Step navigation ==========
-function setStep(n) {
-  currentStep = n;
-  for (let i = 1; i <= 3; i++) {
-    const dot = document.getElementById('sd' + i);
-    const lbl = document.getElementById('slbl' + i);
-    dot.classList.remove('active', 'done');
-    lbl.classList.remove('active');
-    if (i < n) dot.classList.add('done');
-    if (i === n) { dot.classList.add('active'); lbl.classList.add('active'); }
-  }
-  document.getElementById('sl1').classList.toggle('done', n > 1);
-  document.getElementById('sl2').classList.toggle('done', n > 2);
-
-  document.getElementById('step1Card').classList.toggle('hidden', n !== 1);
-  document.getElementById('step2Card').classList.toggle('hidden', n !== 2);
-  document.getElementById('step3Card').classList.toggle('hidden', n !== 3);
-  document.getElementById('resultArea').classList.add('hidden');
-  document.getElementById('errorArea').innerHTML = '';
+// ========== Contract List ==========
+function renderContractList() {
+  const list = document.getElementById('contractList');
+  if (!CONTRACTS.length) { list.innerHTML = '<div class="cl-empty">링크가 연결된 계약서가 없습니다</div>'; return; }
+  list.innerHTML = CONTRACTS.map((c, i) => {
+    const revised = c.base !== c.current;
+    return `<div class="cl-item" data-idx="${i}" data-search="${[c.base,c.current,c.title].join(' ').toLowerCase()}" onclick="selectContract(${i})">
+      <span class="cli-code">${esc(c.current)}</span>
+      <span class="cli-name">${esc(c.title)}</span>
+      ${revised ? '<span class="cli-badge">현행</span>' : ''}
+    </div>`;
+  }).join('');
+}
+function filterContracts() {
+  const q = document.getElementById('contractSearch').value.trim().toLowerCase();
+  document.querySelectorAll('.cl-item').forEach(el => {
+    el.classList.toggle('cli-hidden', q && !el.dataset.search.includes(q));
+  });
+}
+function selectContract(idx) {
+  selectedContract = CONTRACTS[idx];
+  document.querySelectorAll('.cl-item').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.cl-item[data-idx="${idx}"]`).classList.add('selected');
+  document.getElementById('btnOpen').disabled = false;
 }
 
-function goStep1() { setStep(1); }
-
-async function goStep2() {
+// ========== Live Editor ==========
+async function openContract() {
   if (!selectedContract) return;
-  document.getElementById('selectedDisplay').innerHTML =
-    `<span class="sc-code">${esc(selectedContract.current)}</span>
-     <span class="sc-name">${esc(selectedContract.title)}</span>
-     <span class="sc-change" onclick="goStep1()">변경</span>`;
-  setStep(2);
-
-  // 이미 스캔된 결과가 있으면 재사용
-  if (detectedFields.length > 0) {
-    document.getElementById('scanningState').classList.add('hidden');
-    document.getElementById('dynamicForm').classList.remove('hidden');
-    document.getElementById('step2Buttons').classList.remove('hidden');
-    return;
-  }
-
-  await scanAndBuildForm();
-}
-
-async function rescanTemplate() {
-  detectedFields = [];
-  await scanAndBuildForm();
-}
-
-async function scanAndBuildForm() {
-  document.getElementById('scanningState').classList.remove('hidden');
-  document.getElementById('dynamicForm').classList.add('hidden');
-  document.getElementById('step2Buttons').classList.add('hidden');
-  document.getElementById('scanError').classList.add('hidden');
+  document.getElementById('selectCard').classList.add('hidden');
+  document.getElementById('scanningCard').classList.remove('hidden');
+  document.getElementById('scanMsg').textContent = '계약서를 불러오고 있습니다...';
 
   try {
-    // Step A: Apps Script에서 템플릿 텍스트 추출
-    document.getElementById('scanStatus').textContent = '문서 텍스트 추출 중...';
     const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
-    const scanRes = await fetch(endpoint + '?action=scan&templateUrl=' + encodeURIComponent(selectedContract.url));
-    const scanData = await scanRes.json();
-    if (scanData.error) throw new Error(scanData.error);
+    const res = await fetch(endpoint + '?action=scan&templateUrl=' + encodeURIComponent(selectedContract.url));
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
 
-    // Base64 디코딩
-    const binaryStr = atob(scanData.textBase64);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-    templateText = new TextDecoder('utf-8').decode(bytes);
+    detectedFields = data.fields || [];
 
-    // Step B: Gemini로 공란 감지
-    document.getElementById('scanStatus').textContent = 'AI가 공란을 분석 중...';
-    const geminiKey = localStorage.getItem('gowid_gemini_key') || localStorage.getItem('gotrack_gemini_key') || GEMINI_KEY_DEFAULT;
-    const prompt = `아래는 계약서 템플릿의 전문입니다. 이 문서에서 **작성자가 채워야 할 공란**을 모두 찾아주세요.
+    // Decode plain text
+    let fullText = '';
+    if (data.textBase64) {
+      const bin = atob(data.textBase64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      fullText = new TextDecoder('utf-8').decode(bytes);
+    }
 
-공란의 유형:
-- 밑줄(_____)로 표시된 빈칸
-- 괄호 안 빈칸: (   ), [   ]
-- ":" 또는 ":" 뒤에 비어있는 곳
-- 명시적 빈칸 없이도, 계약 당사자 정보(법인명, 대표자, 주소, 사업자등록번호 등)처럼 실제 계약 시 채워야 할 항목
+    if (!fullText) throw new Error('문서 텍스트를 가져올 수 없습니다');
 
-JSON 배열로만 출력하세요. 다른 텍스트는 출력하지 마세요.
-각 항목: {"label":"필드명(예: 법인명)", "placeholder":"입력 예시", "context":"문서에서 해당 공란 주변 텍스트(10~30자)", "searchText":"문서에서 치환할 원본 텍스트(밑줄이나 빈칸 포함)", "required":true/false}
+    // Escape HTML, then replace [field] with inline inputs
+    let safeText = esc(fullText);
 
-중복을 제거하고, 같은 항목이 여러 번 나오면 하나만 반환하세요.
-"갑" 측(고위드) 정보는 이미 채워져 있으므로 제외하세요. "을" 측 정보와 계약 조건만 포함하세요.
-
-===
-${templateText.substring(0, 8000)}
-===`;
-
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
-    const geminiRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } }
-      })
+    detectedFields.forEach(f => {
+      const target = esc(f.searchText);
+      const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const ph = esc(f.label);
+      const ds = esc(f.searchText);
+      const inputTag = `<input type="text" class="inline-blank" data-search="${ds}" data-label="${ph}" placeholder="${ph}" size="${Math.max(f.label.length + 2, 8)}">`;
+      safeText = safeText.replace(new RegExp(escaped, 'g'), inputTag);
     });
-    const geminiData = await geminiRes.json();
-    if (!geminiRes.ok) throw new Error(geminiData?.error?.message || 'Gemini API 오류');
 
-    const allParts = geminiData.candidates?.[0]?.content?.parts || [];
-    const allText = allParts.map(p => p.text || '').join('\n');
-    const codeBlock = allText.match(/```(?:json)?\s*([\s\S]*?)```/);
-    const rawJson = codeBlock ? codeBlock[1] : allText.match(/(\[[\s\S]*\])/)?.[1];
-    if (!rawJson) throw new Error('공란 감지 결과를 파싱할 수 없습니다');
+    // Paragraphs
+    const docHtml = safeText.split('\n').map(line =>
+      `<p>${line || '&nbsp;'}</p>`
+    ).join('');
 
-    detectedFields = JSON.parse(rawJson);
-    buildDynamicForm();
+    document.getElementById('liveDoc').innerHTML = docHtml;
+    document.getElementById('etCode').textContent = selectedContract.current;
+    document.getElementById('etName').textContent = selectedContract.title;
+    document.getElementById('etFieldCount').textContent = detectedFields.length;
+
+    document.getElementById('scanningCard').classList.add('hidden');
+    document.getElementById('editorArea').classList.remove('hidden');
+
+    // Sync same-name fields + filled state
+    document.getElementById('liveDoc').addEventListener('input', onBlankInput);
+
+    // Focus first blank
+    const first = document.querySelector('.inline-blank');
+    if (first) { first.focus(); first.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 
   } catch (e) {
-    document.getElementById('scanningState').classList.add('hidden');
-    document.getElementById('scanError').classList.remove('hidden');
-    document.getElementById('scanError').innerHTML = `<div class="error-box">스캔 실패: ${esc(e.message)}<br><button class="btn-secondary" style="margin-top:8px;padding:6px 14px;font-size:12px" onclick="rescanTemplate()">다시 시도</button></div>`;
+    document.getElementById('scanningCard').classList.add('hidden');
+    document.getElementById('selectCard').classList.remove('hidden');
+    showError('불러오기 실패: ' + e.message);
   }
 }
 
-function buildDynamicForm() {
-  document.getElementById('scanningState').classList.add('hidden');
-  document.getElementById('dynamicForm').classList.remove('hidden');
-  document.getElementById('step2Buttons').classList.remove('hidden');
-  document.getElementById('fieldCount').textContent = detectedFields.length;
-
-  const $fields = document.getElementById('dynamicFields');
-  $fields.innerHTML = detectedFields.map((f, i) => `
-    <div class="form-group">
-      <label>${esc(f.label)}${f.required ? '<span class="req">*</span>' : ''}</label>
-      ${f.context ? `<div style="font-size:11px;color:var(--t30);margin-bottom:4px;font-style:italic">"${esc(f.context)}"</div>` : ''}
-      <input type="text" id="dynField_${i}" placeholder="${esc(f.placeholder || '')}" data-search="${esc(f.searchText || '')}">
-    </div>
-  `).join('');
+function onBlankInput(e) {
+  if (!e.target.classList.contains('inline-blank')) return;
+  const search = e.target.dataset.search;
+  const val = e.target.value;
+  // Sync same-name fields
+  document.querySelectorAll(`.inline-blank[data-search="${CSS.escape(search)}"]`).forEach(inp => {
+    if (inp !== e.target) inp.value = val;
+    inp.classList.toggle('filled', !!val.trim());
+  });
 }
 
-function goStep2Back() { setStep(2); }
-
-function goStep3() {
-  // Collect dynamic field values
-  const filledFields = [];
-  for (let i = 0; i < detectedFields.length; i++) {
-    const input = document.getElementById('dynField_' + i);
-    const val = input ? input.value.trim() : '';
-    const f = detectedFields[i];
-    if (f.required && !val) {
-      return showError(`"${f.label}" 항목을 입력해 주세요`);
-    }
-    filledFields.push({ ...f, value: val });
-  }
-
-  // Build preview
-  const previewItems = [
-    ['계약서', `${selectedContract.current} — ${selectedContract.title}`],
-    ...filledFields.filter(f => f.value).map(f => [f.label, f.value])
-  ];
-
-  document.getElementById('previewInfo').innerHTML = previewItems.map(([l, v]) =>
-    `<div class="preview-row"><span class="pr-label">${esc(l)}</span><span class="pr-value">${esc(v)}</span></div>`
-  ).join('');
-
-  setStep(3);
+function goBack() {
+  document.getElementById('editorArea').classList.add('hidden');
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('errorArea').innerHTML = '';
+  document.getElementById('selectCard').classList.remove('hidden');
+  document.getElementById('liveDoc').removeEventListener('input', onBlankInput);
+  detectedFields = [];
 }
 
-// ========== Generate ==========
-async function generate() {
-  const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
-  if (!endpoint) return showError('연동이 설정되지 않았습니다');
-
-  // Build replacement map from dynamic fields
+// ========== PDF Generate ==========
+async function generatePdf() {
+  const inputs = document.querySelectorAll('.inline-blank');
   const replacementMap = {};
   let companyName = '';
-  for (let i = 0; i < detectedFields.length; i++) {
-    const f = detectedFields[i];
-    const input = document.getElementById('dynField_' + i);
-    const val = input ? input.value.trim() : '';
-    if (val && f.searchText) {
-      replacementMap[f.searchText] = val;
+  let firstEmpty = null;
+
+  // Deduplicate: one value per searchText
+  const seen = new Set();
+  inputs.forEach(inp => {
+    const search = inp.dataset.search;
+    const label = inp.dataset.label;
+    const val = inp.value.trim();
+    if (!seen.has(search)) {
+      seen.add(search);
+      if (!val) {
+        inp.classList.add('error');
+        if (!firstEmpty) firstEmpty = inp;
+        setTimeout(() => inp.classList.remove('error'), 2500);
+      } else {
+        replacementMap[search] = val;
+        if (/법인명|상호|회사명/.test(label)) companyName = val;
+      }
     }
-    // 법인명/상호 감지
-    if (val && /법인명|상호|회사명/.test(f.label)) companyName = val;
+  });
+
+  if (firstEmpty) {
+    firstEmpty.focus();
+    firstEmpty.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return showError('모든 공란을 채워 주세요');
   }
 
+  const endpoint = localStorage.getItem('gotrack_gen_endpoint') || DEFAULT_GEN_ENDPOINT;
   const params = new URLSearchParams({
     action: 'generate',
     templateUrl: selectedContract.url,
@@ -731,7 +650,6 @@ async function generate() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-
     showLoading(false);
     showResult(data);
   } catch (e) {
@@ -741,117 +659,47 @@ async function generate() {
 }
 
 function showResult(data) {
+  document.getElementById('editorArea').classList.add('hidden');
   const area = document.getElementById('resultArea');
   area.classList.remove('hidden');
-  document.getElementById('step3Card').classList.add('hidden');
-
-  // Update step dots
-  document.getElementById('sd3').classList.remove('active');
-  document.getElementById('sd3').classList.add('done');
-
   area.innerHTML = `
     <div class="result-card">
       <div class="rc-icon">&#x2705;</div>
       <h3>${esc(data.fileName || '계약서 생성 완료')}</h3>
-      <p>계약서가 생성되었습니다. PDF를 다운로드하거나 Google Docs에서 추가 편집할 수 있습니다.</p>
-      <div class="btn-row" style="justify-content:center">
-        <a class="btn-download" href="${esc(data.pdfDownload)}" target="_blank">PDF 다운로드</a>
+      <p>공란이 모두 채워진 PDF가 생성되었습니다.</p>
+      <a class="btn-download" href="${esc(data.pdfDownload)}" target="_blank">PDF 다운로드</a>
+      <div class="btn-row">
+        <a class="btn-secondary" href="${esc(data.pdfUrl)}" target="_blank" style="text-align:center;text-decoration:none;color:var(--t60)">미리보기</a>
+        <button class="btn-secondary" onclick="resetAll()">새 계약서 만들기</button>
       </div>
-      <div class="btn-row" style="justify-content:center;margin-top:8px">
-        <a class="btn-secondary" href="${esc(data.pdfUrl)}" target="_blank" style="text-align:center;text-decoration:none;color:var(--t60)">PDF 미리보기</a>
-        <a class="btn-secondary" href="${esc(data.docUrl)}" target="_blank" style="text-align:center;text-decoration:none;color:var(--t60)">Google Docs에서 편집</a>
-      </div>
-    </div>
-    <div style="text-align:center;margin-top:16px">
-      <span style="color:var(--accent);cursor:pointer;font-size:14px;text-decoration:underline" onclick="resetAll()">새 계약서 만들기</span>
     </div>`;
-}
-
-// ========== Contract list ==========
-function renderContractList() {
-  const list = document.getElementById('contractList');
-  if (CONTRACTS.length === 0) {
-    list.innerHTML = '<div class="cl-empty">링크가 연결된 계약서가 없습니다</div>';
-    return;
-  }
-
-  list.innerHTML = CONTRACTS.map((c, i) => {
-    const revised = c.base !== c.current;
-    return `<div class="cl-item" data-idx="${i}" data-search="${[c.base,c.current,c.title].join(' ').toLowerCase()}" onclick="selectContractItem(${i})">
-      <span class="cli-code">${esc(c.current)}</span>
-      <span class="cli-name">${esc(c.title)}</span>
-      ${revised ? '<span class="cli-badge">현행</span>' : ''}
-    </div>`;
-  }).join('');
-}
-
-function filterContracts() {
-  const q = document.getElementById('contractSearch').value.trim().toLowerCase();
-  document.querySelectorAll('.cl-item').forEach(el => {
-    const match = !q || el.dataset.search.includes(q);
-    el.classList.toggle('cli-hidden', !match);
-  });
-}
-
-function selectContractItem(idx) {
-  selectedContract = CONTRACTS[idx];
-  document.querySelectorAll('.cl-item').forEach(el => el.classList.remove('selected'));
-  document.querySelector(`.cl-item[data-idx="${idx}"]`).classList.add('selected');
-  document.getElementById('btnStep1').disabled = false;
 }
 
 // ========== Utilities ==========
 function esc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function formatDateKR(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
-}
-
-function formatBizNo(input) {
-  let v = input.value.replace(/[^0-9]/g, '');
-  if (v.length > 3 && v.length <= 5) v = v.slice(0,3) + '-' + v.slice(3);
-  else if (v.length > 5) v = v.slice(0,3) + '-' + v.slice(3,5) + '-' + v.slice(5,10);
-  input.value = v;
-}
-
-function formatCorpNo(input) {
-  let v = input.value.replace(/[^0-9]/g, '');
-  if (v.length > 6) v = v.slice(0,6) + '-' + v.slice(6,13);
-  input.value = v;
-}
-
 function showError(msg) {
   document.getElementById('errorArea').innerHTML = `<div class="error-box">${esc(msg)}</div>`;
   setTimeout(() => { document.getElementById('errorArea').innerHTML = ''; }, 5000);
 }
-
-function showLoading(show) {
-  document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
-}
-
+function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('hidden', !show); }
 function copyScript(btn) {
   navigator.clipboard.writeText(APPS_SCRIPT).then(() => {
     btn.textContent = '복사됨!';
     setTimeout(() => { btn.textContent = '복사'; }, 1500);
   });
 }
-
 function resetAll() {
   selectedContract = null;
   detectedFields = [];
-  templateText = '';
   document.querySelectorAll('.cl-item').forEach(el => el.classList.remove('selected'));
-  document.getElementById('btnStep1').disabled = true;
+  document.getElementById('btnOpen').disabled = true;
   document.getElementById('contractSearch').value = '';
-  document.getElementById('dynamicFields').innerHTML = '';
-  document.getElementById('dynamicForm').classList.add('hidden');
-  document.getElementById('scanError').classList.add('hidden');
+  document.getElementById('editorArea').classList.add('hidden');
   document.getElementById('resultArea').classList.add('hidden');
   document.getElementById('errorArea').innerHTML = '';
+  document.getElementById('liveDoc').innerHTML = '';
+  document.getElementById('selectCard').classList.remove('hidden');
   filterContracts();
-  setStep(1);
 }
 </script>
 <script src="auth-gate.js"></script>

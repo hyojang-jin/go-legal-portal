@@ -74,6 +74,15 @@
   .qi-remove{font-size:16px;color:var(--t15);cursor:pointer;padding:4px;border-radius:4px;transition:all .15s;flex-shrink:0}
   .qi-remove:hover{color:var(--red);background:rgba(255,107,107,.08)}
 
+  /* Requester */
+  .requester-row{display:flex;align-items:center;gap:10px;margin-top:16px;padding:12px 14px;background:var(--t08);border:1px solid var(--t15);border-radius:10px}
+  .requester-row label{font-size:12px;color:var(--t60);font-weight:600;white-space:nowrap}
+  .requester-row input{flex:1;padding:7px 12px;border:1px solid var(--t15);border-radius:6px;font-size:13px;font-family:inherit;background:var(--card);color:var(--t50);transition:border-color .2s}
+  .requester-row input:focus{outline:none;border-color:var(--accent)}
+  .requester-row input::placeholder{color:var(--t30)}
+  .requester-row .req-saved{font-size:11px;color:var(--green);opacity:0;transition:opacity .3s}
+  .requester-row .req-saved.show{opacity:1}
+
   /* Submit Button */
   .submit-row{margin-top:20px;display:flex;gap:12px;align-items:center}
   .btn-drop{flex:1;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#0f0f14}
@@ -112,7 +121,7 @@
 <body>
 
 <nav class="top-nav">
-  <a href="index.html" class="nav-home">&#x2190; Go Legal Portal</a>
+  <a href="gowid-legal-portal.html" class="nav-home">&#x2190; Gowid Legal Portal</a>
   <div class="nav-title" onclick="location.reload()">GoDrop<span class="nav-ver">v1.0</span></div>
 </nav>
 
@@ -159,6 +168,13 @@
   <div class="queued-list" id="queuedList"></div>
 </div>
 
+<!-- Requester -->
+<div class="requester-row">
+  <label>투입자 <span style="font-size:10px;color:var(--t30);font-weight:400">(선택)</span></label>
+  <input type="text" id="requesterName" placeholder="이름을 입력하세요" oninput="saveRequester()">
+  <span class="req-saved" id="reqSaved">저장됨</span>
+</div>
+
 <!-- Submit -->
 <div class="submit-row">
   <button class="btn-drop" id="btnDrop" disabled>
@@ -171,7 +187,7 @@
 
 <div class="footer">
   GoDrop v1.0 &middot; 서류 보관소<br>
-  Go Legal Portal &middot; Gowid Legal Tech &middot; 2026
+  Gowid Legal Portal &middot; Gowid Legal Tech &middot; 2026
 </div>
 
 <!-- Success Overlay -->
@@ -214,6 +230,23 @@ async function saveFileToDB(entry) {
     tx.onerror = () => reject(tx.error);
   });
 }
+
+/* ── Requester Name ── */
+function saveRequester() {
+  const name = document.getElementById('requesterName').value.trim();
+  localStorage.setItem('gowid_user_name', name);
+  const badge = document.getElementById('reqSaved');
+  badge.classList.add('show');
+  setTimeout(() => badge.classList.remove('show'), 1200);
+}
+function getRequesterName() {
+  return localStorage.getItem('gowid_user_name') || '';
+}
+// Restore on load
+(function() {
+  const saved = getRequesterName();
+  if (saved) document.getElementById('requesterName').value = saved;
+})();
 
 /* ── State ── */
 let queuedFiles = [];
@@ -286,6 +319,8 @@ $qClear.addEventListener('click', () => {
 /* ── Submit ── */
 $btn.addEventListener('click', async () => {
   if ($btn.disabled) return;
+  const requester = getRequesterName();
+  usageTrack('drop-submit');
   $btn.disabled = true;
   $btn.textContent = '보관 중...';
 
@@ -314,6 +349,7 @@ $btn.addEventListener('click', async () => {
       id: ids[i],
       name: queuedFiles[i].name,
       size: queuedFiles[i].size,
+      submitter: requester,
       timestamp: now.toISOString(),
       dateStr: formatDate(now)
     });
@@ -362,6 +398,7 @@ function getMimeType(ext) {
 }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 </script>
+<script src="usage-tracker.js"></script>
 <script src="auth-gate.js"></script>
 </body>
 </html>

@@ -40,6 +40,24 @@
   .doc-area>div{overflow:hidden}
   .doc-area.open{grid-template-rows:1fr;padding:16px}
   .doc-area .doc-hint{font-size:12px;color:var(--t60);margin-bottom:10px;line-height:1.5}
+
+  /* Compare mode tabs */
+  .cmp-tabs{display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid var(--t08)}
+  .cmp-tab{padding:8px 16px;font-size:12px;font-weight:600;color:var(--t30);cursor:pointer;border:none;background:none;font-family:inherit;border-bottom:2px solid transparent;transition:all .15s}
+  .cmp-tab:hover{color:var(--t60)}
+  .cmp-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .cmp-panel{display:none}
+  .cmp-panel.active{display:block}
+
+  /* Code compare */
+  .code-compare{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .code-compare input{width:100px;padding:10px 14px;border:1.5px solid var(--t15);border-radius:8px;font-size:15px;font-weight:700;font-family:'SF Mono','Consolas',monospace;background:var(--t08);color:var(--t50);text-align:center;text-transform:uppercase;letter-spacing:1px;transition:border-color .2s}
+  .code-compare input:focus{outline:none;border-color:var(--accent)}
+  .code-compare input::placeholder{color:var(--t30);font-weight:400;font-size:12px;letter-spacing:0}
+  .code-compare .cmp-arrow{font-size:18px;color:var(--t30);font-weight:300}
+  .code-compare .cmp-vs{font-size:12px;color:var(--t30);font-weight:600}
+  .code-compare-hint{font-size:11px;color:var(--t30);margin-top:8px}
+
   .doc-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   textarea.doc-input{width:100%;min-height:180px;background:var(--t08);border:1.5px solid var(--t15);border-radius:8px;padding:14px;font-size:13px;font-family:inherit;color:var(--t50);line-height:1.6;resize:vertical;transition:border-color .2s}
   textarea.doc-input:focus{outline:none;border-color:var(--accent)}
@@ -210,7 +228,7 @@
 </head>
 <body>
 <nav class="top-nav">
-  <a class="nav-home" href="index.html">&#x2190; Go Legal Portal</a>
+  <a class="nav-home" href="gowid-legal-portal.html">&#x2190; Gowid Legal Portal</a>
   <span class="nav-title" onclick="resetAll()">Go_track<span class="nav-ver">v1.0</span></span>
 </nav>
 <header>
@@ -220,16 +238,6 @@
 </header>
 <div class="wrap">
   <div class="input-card">
-    <!-- API Key (기본 내장 — 숨김) -->
-    <div id="apiSection" class="hidden">
-      <div class="api-row">
-        <input type="password" id="apiKey" placeholder="Gemini API 키를 입력하세요" />
-        <button class="save-btn" onclick="saveKey()">저장</button>
-      </div>
-      <div class="api-link">API 키가 없다면 → <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에서 발급</div>
-    </div>
-    <div class="api-status hidden" id="apiStatus"></div>
-
     <h2>어떤 계약서가 궁금하신가요?</h2>
     <p class="hint">계약서 코드, 조항명, 또는 변경 내용에 대한 질문을 자유롭게 입력하세요.</p>
     <textarea class="main-input" id="userInput" placeholder="예: F53F 최신 개정에서 뭐가 바뀌었나요?&#10;&#10;예: V02B 자동연장 조항이 새로 생긴 배경이 궁금합니다&#10;&#10;예: G06B 기한이익 상실 조항이 강화됐다는데, 현업에서 뭘 주의해야 하나요?" oninput="toggleBtn()"></textarea>
@@ -262,24 +270,43 @@
       </div>
     </div>
 
-    <!-- Document paste area (collapsible) -->
+    <!-- Version compare area (collapsible) -->
     <hr class="doc-divider">
     <div class="doc-toggle" id="docToggle" onclick="toggleDoc()">
-      <span class="chevron" id="docChevron">▶</span>
-      <span class="doc-label">계약서 텍스트를 직접 비교하려면 여기에 붙여 넣으세요</span>
+      <span class="chevron" id="docChevron">&#x25B6;</span>
+      <span class="doc-label">두 버전을 직접 비교하려면 여기를 펼치세요</span>
       <span class="doc-optional">선택</span>
     </div>
     <div class="doc-area" id="docArea">
       <div>
-        <p class="doc-hint">이전 버전과 현재 버전의 계약서 텍스트를 각각 붙여 넣으면, AI가 변경 사항을 분석합니다.</p>
-        <div class="doc-columns">
-          <div>
-            <div class="doc-col-label old">이전 버전</div>
-            <textarea class="doc-input" id="docOld" placeholder="이전 버전 계약서 텍스트..."></textarea>
+        <div class="cmp-tabs">
+          <button class="cmp-tab active" onclick="switchCmpTab('code',this)">버전 코드 비교</button>
+          <button class="cmp-tab" onclick="switchCmpTab('text',this)">텍스트 직접 붙여넣기</button>
+        </div>
+
+        <!-- 버전 코드 비교 -->
+        <div class="cmp-panel active" id="cmpCode">
+          <p class="doc-hint">비교할 두 버전의 코드를 입력하면 AI가 차이점을 분석합니다.</p>
+          <div class="code-compare">
+            <input type="text" id="codeOld" placeholder="예: F53A" maxlength="6" oninput="this.value=this.value.toUpperCase()">
+            <span class="cmp-vs">vs</span>
+            <input type="text" id="codeNew" placeholder="예: F53C" maxlength="6" oninput="this.value=this.value.toUpperCase()">
           </div>
-          <div>
-            <div class="doc-col-label new">현재 버전</div>
-            <textarea class="doc-input" id="docNew" placeholder="현재 버전 계약서 텍스트..."></textarea>
+          <div class="code-compare-hint">알파벳 뒤 코드가 버전입니다 (A → B → C → ...). 코드를 넣으면 질문란에 자동 반영됩니다.</div>
+        </div>
+
+        <!-- 텍스트 직접 붙여넣기 -->
+        <div class="cmp-panel" id="cmpText">
+          <p class="doc-hint">이전 버전과 현재 버전의 계약서 텍스트를 각각 붙여 넣으면, AI가 변경 사항을 분석합니다.</p>
+          <div class="doc-columns">
+            <div>
+              <div class="doc-col-label old">이전 버전</div>
+              <textarea class="doc-input" id="docOld" placeholder="이전 버전 계약서 텍스트..."></textarea>
+            </div>
+            <div>
+              <div class="doc-col-label new">현재 버전</div>
+              <textarea class="doc-input" id="docNew" placeholder="현재 버전 계약서 텍스트..."></textarea>
+            </div>
           </div>
         </div>
       </div>
@@ -417,7 +444,7 @@ const DEFAULT_KEY = '';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 async function callAI(userText) {
-  const key = localStorage.getItem('gotrack_gemini_key') || DEFAULT_KEY;
+  const key = localStorage.getItem('gotrack_gemini_key') || localStorage.getItem('gowid_gemini_key') || DEFAULT_KEY;
   if (!key) throw new Error('API 키가 설정되지 않았습니다.');
 
   const res = await fetch(`${GEMINI_URL}?key=${key}`, {
@@ -458,23 +485,8 @@ async function callAI(userText) {
 }
 
 // ========== UI ==========
-function saveKey() {
-  const key = document.getElementById('apiKey').value.trim();
-  if (!key) return;
-  localStorage.setItem('gotrack_gemini_key', key);
-  document.getElementById('apiSection').classList.add('hidden');
-  document.getElementById('apiStatus').classList.remove('hidden');
-  toggleBtn();
-}
-
-function showKeyInput() {
-  document.getElementById('apiSection').classList.remove('hidden');
-  document.getElementById('apiStatus').classList.add('hidden');
-  document.getElementById('apiKey').value = localStorage.getItem('gotrack_gemini_key') || '';
-}
-
 function toggleBtn() {
-  const hasKey = !!(localStorage.getItem('gotrack_gemini_key') || DEFAULT_KEY);
+  const hasKey = !!(localStorage.getItem('gotrack_gemini_key') || localStorage.getItem('gowid_gemini_key') || DEFAULT_KEY);
   const hasText = !!document.getElementById('userInput').value.trim();
   document.getElementById('scanBtn').disabled = !(hasKey && hasText);
 }
@@ -487,6 +499,27 @@ function toggleDoc() {
   chevron.classList.toggle('open', isOpen);
   toggle.classList.toggle('active', isOpen);
 }
+
+// Compare mode tabs
+function switchCmpTab(mode, btn) {
+  document.querySelectorAll('.cmp-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.cmp-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(mode === 'code' ? 'cmpCode' : 'cmpText').classList.add('active');
+}
+
+// Auto-fill question from version code inputs
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'codeOld' || e.target.id === 'codeNew') {
+    const oldCode = document.getElementById('codeOld').value.trim().toUpperCase();
+    const newCode = document.getElementById('codeNew').value.trim().toUpperCase();
+    if (oldCode && newCode) {
+      const input = document.getElementById('userInput');
+      input.value = `[${oldCode}] → [${newCode}] 두 버전의 변경 사항과 개정 취지를 비교해 주세요`;
+      toggleBtn();
+    }
+  }
+});
 
 const TAG_CONTEXT = {
   'FUEL 계약서': '[FUEL 계약서 변경 이력] ',
@@ -521,11 +554,17 @@ function injectTag(el) {
 async function scan() {
   const questionText = document.getElementById('userInput').value.trim();
   if (!questionText) return;
+  usageTrack('track-scan');
 
+  const codeOld = document.getElementById('codeOld').value.trim().toUpperCase();
+  const codeNew = document.getElementById('codeNew').value.trim().toUpperCase();
   const docOld = document.getElementById('docOld').value.trim();
   const docNew = document.getElementById('docNew').value.trim();
 
   let combined = `[질문] ${questionText}`;
+  if (codeOld && codeNew) {
+    combined += `\n\n[버전 비교 요청] ${codeOld} → ${codeNew}`;
+  }
   if (docOld || docNew) {
     combined += '\n\n[첨부 계약서 텍스트]';
     if (docOld) combined += `\n--- 이전 버전 ---\n${docOld}`;
@@ -927,9 +966,6 @@ function filterTree() {
 // Init
 window.addEventListener('DOMContentLoaded', () => {
   renderTree();
-  // 기본 키 내장 — API 섹션 및 상태 모두 숨김
-  document.getElementById('apiSection').classList.add('hidden');
-  document.getElementById('apiStatus').classList.add('hidden');
   toggleBtn();
 });
 
@@ -941,6 +977,7 @@ document.getElementById('userInput').addEventListener('keydown', function(e) {
   }
 });
 </script>
+<script src="usage-tracker.js"></script>
 <script src="auth-gate.js"></script>
 </body>
 </html>
