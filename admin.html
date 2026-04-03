@@ -293,6 +293,32 @@
   <!-- GoTrack Endpoints -->
   <div class="settings-group">
     <div class="sg-title"><span class="sg-icon">&#x1F517;</span>GoTrack 엔드포인트</div>
+
+    <!-- Apps Script 배포 가이드 -->
+    <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:12px">
+      <div class="sr-info">
+        <div class="sr-label">Apps Script 배포 가이드</div>
+        <div class="sr-desc">Go_track Live 연동이 깨졌을 때 아래 스크립트로 재배포하세요</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="sr-btn" id="btnShowScript" onclick="toggleAppsScript()" style="color:var(--blue);border-color:rgba(116,192,252,.3)">스크립트 보기</button>
+        <span style="font-size:11px;color:var(--t30)">스프레드시트 → 확장 프로그램 → Apps Script → 붙여넣기 → 배포</span>
+      </div>
+      <div id="appsScriptArea" style="display:none">
+        <div style="position:relative;background:#111;border:1px solid var(--t15);border-radius:8px;padding:14px;margin-top:4px">
+          <button class="sr-btn" onclick="copyAppsScript(this)" style="position:absolute;top:8px;right:8px;font-size:10px;padding:4px 10px">복사</button>
+          <pre id="appsScriptCode" style="font-size:11px;color:var(--t60);line-height:1.6;white-space:pre-wrap;font-family:'SF Mono','Consolas',monospace;overflow-x:auto;margin:0"></pre>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--t60);line-height:1.8">
+          <strong style="color:var(--t80)">배포 순서:</strong><br>
+          1. 스프레드시트에서 <code style="color:var(--blue)">확장 프로그램</code> → <code style="color:var(--blue)">Apps Script</code><br>
+          2. 기존 코드를 지우고 위 스크립트를 붙여넣은 후 저장 (Ctrl+S)<br>
+          3. <code style="color:var(--blue)">배포</code> → <code style="color:var(--blue)">새 배포</code> → 유형: <code style="color:var(--blue)">웹 앱</code> → 액세스: <code style="color:var(--blue)">모든 사용자</code> → 배포<br>
+          4. 생성된 URL을 아래 "계약서 조회 Endpoint"에 붙여넣기
+        </div>
+      </div>
+    </div>
+
     <div class="setting-row">
       <div class="sr-info">
         <div class="sr-label">계약서 조회 Endpoint</div>
@@ -866,6 +892,75 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s; re
 /* ═══════════════════════════════════════
    Init
    ═══════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Apps Script Deploy
+   ═══════════════════════════════════════ */
+const APPS_SCRIPT_CODE = `function doGet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // "Link" 탭을 먼저 찾고, 없으면 첫 번째 시트 사용
+  var sheet = ss.getSheetByName("Link");
+  if (!sheet) sheet = ss.getSheetByName("link");
+  if (!sheet) sheet = ss.getSheets()[0];
+
+  var data = sheet.getDataRange();
+  var rows = data.getNumRows();
+  var cols = data.getNumColumns();
+  var richTexts = data.getRichTextValues();
+  var values = data.getValues();
+
+  var result = [];
+  for (var r = 0; r < rows; r++) {
+    // Link 열 (6번째 열, index 5) 에서 하이퍼링크 추출
+    var baseCode = String(values[r][1]).trim();
+    var title = String(values[r][2]).trim();
+    var linkCell = richTexts[r][5];
+    var displayText = String(values[r][5]).trim();
+
+    // 헤더/섹션 행 스킵
+    if (!baseCode || baseCode === "Code" || !displayText || displayText === "Link") continue;
+    if (["ENGINE","FUEL","vws","구독","vws+FUEL","참고"].includes(baseCode)) continue;
+
+    var url = "";
+    if (linkCell) {
+      var runs = linkCell.getRuns();
+      for (var i = 0; i < runs.length; i++) {
+        var u = runs[i].getLinkUrl();
+        if (u) { url = u; break; }
+      }
+    }
+
+    result.push({
+      base: baseCode,
+      title: title,
+      current: displayText,
+      url: url
+    });
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+document.getElementById('appsScriptCode').textContent = APPS_SCRIPT_CODE;
+
+window.toggleAppsScript = function() {
+  const area = document.getElementById('appsScriptArea');
+  const btn = document.getElementById('btnShowScript');
+  const isHidden = area.style.display === 'none';
+  area.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? '스크립트 접기' : '스크립트 보기';
+};
+
+window.copyAppsScript = function(btn) {
+  navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(() => {
+    btn.textContent = '복사됨!';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('saved'); }, 1500);
+  });
+};
+
 /* ═══════════════════════════════════════
    Usage Dashboard
    ═══════════════════════════════════════ */
